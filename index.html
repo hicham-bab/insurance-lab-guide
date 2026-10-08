@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insurance lab guide: Fivetran, Snowflake, dbt platform and Streamlit</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2431; --border:#2a3340;
+    --text:#e6edf3; --muted:#9aa7b4; --faint:#6b7684;
+    --fivetran:#2f80ff; --snowflake:#29b5e8; --dbt:#ff694a; --ai:#7c5cff;
+    --green:#3fb950; --amber:#e3b341; --red:#f85149;
+    --accent:#ff694a; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--bg); color:var(--text); line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--fivetran)}
+  .wrap{max-width:1000px; margin:0 auto; padding:0 20px}
+  code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  #progress{position:fixed; top:0; left:0; height:4px; width:0%; z-index:100; transition:width .2s;
+    background:linear-gradient(90deg,var(--snowflake),var(--dbt),var(--ai))}
+
+  header.hero{padding:56px 0 34px; text-align:center; border-bottom:1px solid var(--border);
+    background:radial-gradient(1200px 400px at 50% -120px, rgba(255,105,74,.13), transparent)}
+  .kicker{display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--border); padding:5px 12px; border-radius:999px; margin-bottom:16px}
+  h1{font-size:clamp(28px,4.4vw,44px); line-height:1.12; margin:.1em 0 .35em; letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--snowflake),var(--dbt) 60%,var(--ai));
+    -webkit-background-clip:text; background-clip:text; color:transparent}
+  .sub{color:var(--muted); font-size:18px; max-width:700px; margin:0 auto}
+  .meta-row{margin-top:20px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; font-size:13px; color:var(--faint)}
+  .meta-row span{background:var(--panel); border:1px solid var(--border); padding:5px 12px; border-radius:999px}
+
+  section{padding:40px 0}
+  h2{font-size:24px; letter-spacing:-.01em; margin:0 0 6px}
+  .lead{color:var(--muted); margin:0 0 22px; max-width:760px}
+
+  /* the stack strip */
+  .stack{display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+  @media(max-width:820px){.stack{grid-template-columns:1fr 1fr}}
+  .layer{background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--c); border-radius:12px; padding:14px 14px 12px}
+  .layer b{display:block; font-size:14px}
+  .layer span{font-size:12.5px; color:var(--muted)}
+
+  .question{margin-top:18px; padding:16px 20px; border-radius:12px; background:var(--panel2);
+    border:1px solid var(--border); border-left:4px solid var(--accent); font-size:17px}
+
+  /* steps */
+  .listbar{display:flex; align-items:center; gap:10px; margin:0 0 16px; flex-wrap:wrap}
+  .btn{background:var(--panel); border:1px solid var(--border); color:var(--text); padding:7px 13px;
+    border-radius:9px; font-size:13px; cursor:pointer}
+  .btn:hover{border-color:#3a4552}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#1a0a05; font-weight:600}
+  .hint{font-size:12.5px; color:var(--faint)}
+
+  .step{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden}
+  .step.now{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+  .step-head{display:flex; align-items:center; gap:14px; padding:15px 18px; cursor:pointer}
+  .step-head:hover{background:var(--panel2)}
+  .chk{width:22px; height:22px; border-radius:6px; border:2px solid var(--faint); flex:0 0 auto; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:13px; transition:.15s}
+  .chk:hover{border-color:var(--green)}
+  .step.done .chk{background:var(--green); border-color:var(--green); color:#06210c}
+  .step.done .step-title{color:var(--muted); text-decoration:line-through; text-decoration-color:var(--faint)}
+  .clock{font-family:ui-monospace,Menlo,monospace; font-size:12.5px; color:var(--faint); min-width:40px}
+  .step-title{flex:1; font-weight:600; font-size:16px}
+  .min{font-size:12px; color:var(--muted); background:var(--panel2); border:1px solid var(--border);
+    padding:3px 9px; border-radius:999px; white-space:nowrap}
+  .caret{color:var(--muted); transition:.2s; font-size:12px; border:1px solid var(--border);
+    border-radius:6px; padding:3px 7px; background:var(--panel2)}
+  .step.open .caret{transform:rotate(90deg)}
+  .step-body{display:none; padding:2px 20px 20px 54px}
+  .step.open .step-body{display:block}
+  .step-body p{margin:.5em 0}
+  .step-body ul,.step-body ol{margin:.4em 0; padding-left:20px}
+  .step-body li{margin:.3em 0}
+  .step-body code{background:#0b0f14; padding:2px 6px; border-radius:5px; font-size:12.5px}
+  pre{background:#0b0f14; border:1px solid var(--border); border-radius:10px; padding:13px 15px;
+    overflow:auto; font-size:12.5px; margin:.6em 0; white-space:pre-wrap}
+
+  /* wizard prompts */
+  .prompt{position:relative; margin:.8em 0; border:1px solid rgba(255,105,74,.45); border-radius:10px;
+    background:rgba(255,105,74,.06)}
+  .prompt .tag{display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--dbt); padding:8px 12px 0; font-weight:700}
+  .prompt pre{border:0; background:transparent; margin:0; padding:6px 12px 12px; color:#f1e3de; padding-right:78px}
+  .prompt .copy{position:absolute; top:7px; right:8px; background:var(--panel2); color:var(--text);
+    border:1px solid var(--border); border-radius:7px; font-size:12px; padding:4px 10px; cursor:pointer}
+  .prompt .copy:hover{border-color:var(--dbt)}
+  .prompt .copy.ok{background:var(--green); color:#06210c; border-color:var(--green)}
+  .prompt.sf{border-color:rgba(41,181,232,.5); background:rgba(41,181,232,.06)}
+  .prompt.sf .tag{color:var(--snowflake)}
+  .prompt.sf pre{color:#dcecf3}
+
+  .callout{border-radius:10px; padding:12px 16px; margin:12px 0; font-size:13.5px; border:1px solid}
+  .callout .lab{font-weight:700; display:block; margin-bottom:2px; font-size:12px; text-transform:uppercase; letter-spacing:.06em}
+  .cp{background:rgba(41,181,232,.10); border-color:rgba(41,181,232,.4)} .cp .lab{color:var(--snowflake)}
+  .fb{background:rgba(227,179,65,.09); border-color:rgba(227,179,65,.35)} .fb .lab{color:var(--amber)}
+  .key{background:rgba(124,92,255,.10); border-color:rgba(124,92,255,.4)} .key .lab{color:#a78bff}
+  .ok{background:rgba(63,185,80,.09); border-color:rgba(63,185,80,.4)} .ok .lab{color:var(--green)}
+
+  table.grid{width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0}
+  table.grid th,table.grid td{padding:8px 11px; border:1px solid var(--border); text-align:left; vertical-align:top}
+  table.grid th{background:var(--panel2)}
+
+  #pill{position:fixed; right:16px; bottom:16px; z-index:90; background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:9px 15px; font-size:13px; color:var(--muted); box-shadow:0 8px 26px rgba(0,0,0,.45); max-width:300px}
+  #pill b{color:var(--text)}
+  #pill .behind{color:var(--amber)} #pill .ahead{color:var(--green)}
+  footer{border-top:1px solid var(--border); padding:30px 0 70px; color:var(--faint); font-size:13px; text-align:center}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">Hands-on lab, about 3 hours</span>
+    <h1><span class="grad">Claims and fraud:</span><br>from a Postgres table to an app</h1>
+    <p class="sub">An auto insurer has 1,000 claims in a database and a fraud problem. You will land the data with Fivetran, model it on the dbt platform with dbt Wizard doing the heavy lifting, and ship a Streamlit app in Snowflake.</p>
+    <div class="meta-row">
+      <span>Fivetran</span><span>Snowflake</span><span>dbt platform</span><span>dbt Wizard</span><span>dbt Wizard Explore Mode</span><span>Streamlit in Snowflake</span>
+    </div>
+  </div>
+</header>
+
+<section class="wrap">
+  <h2>What you are building</h2>
+  <p class="lead">Five layers, one data set, one governed definition of every number.</p>
+  <div class="stack">
+    <div class="layer" style="--c:var(--fivetran)"><b>Fivetran</b><span>Lands the <code>claims</code> table in Snowflake in minutes.</span></div>
+    <div class="layer" style="--c:var(--snowflake)"><b>Snowflake</b><span>Stores it, runs everything, hosts the app.</span></div>
+    <div class="layer" style="--c:var(--dbt)"><b>dbt platform</b><span>Staging, marts, contracts, tests, docs, jobs.</span></div>
+    <div class="layer" style="--c:var(--ai)"><b>dbt Wizard</b><span>Fixes what is broken, writes what is missing, answers questions.</span></div>
+    <div class="layer" style="--c:var(--green)"><b>Consumption</b><span>Explore Mode to ask, Streamlit in Snowflake to ship.</span></div>
+  </div>
+  <div class="question"><b>Your business question:</b> where is the money going on auto claims, and where does confirmed fraud concentrate?</div>
+  <div class="callout fb" style="margin-top:16px"><span class="lab">Your safety net, before anything else</span>If staging is red, the cause is almost always <code>source_schema</code> in <code>dbt_project.yml</code> or a sync that has not finished. Check those first rather than losing ten minutes.</div>
+</section>
+
+<section class="wrap" id="steps">
+  <h2>The run of show</h2>
+  <p class="lead">Tick a step when you are done and the page remembers. Prompts for dbt Wizard have a Copy button. Start the lab clock if you want the page to tell you when you are behind.</p>
+  <div class="listbar">
+    <button class="btn" id="expand">Expand all</button>
+    <button class="btn" id="collapse">Collapse all</button>
+    <button class="btn primary" id="startclock">Start lab clock</button>
+    <button class="btn" id="reset">Reset progress</button>
+    <span class="hint" id="openhint"></span>
+  </div>
+  <div id="steplist">
+
+  <!-- 1 -->
+  <div class="step" data-i="0" data-start="0">
+    <div class="step-head"><div class="chk"></div><span class="clock">0:00</span><span class="step-title">Welcome, fork the repo, meet the data</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <ol>
+        <li>Use the repo your instructor gave you (<code>dbt-insurance-lab-hol</code> in the dbt-Hands-on-Labs org, or a copy of it). Create a branch in the dbt IDE before you edit.</li>
+        <li>The dbt project sits at the repo root, so you will edit <code>dbt_project.yml</code> and the models directly.</li>
+        <li>The data: one table, <code>claims</code>, 1,000 rows. One row per auto insurance claim, with the policy, the insured, the incident, the amounts, the vehicle, and whether the claim was confirmed as fraud.</li>
+      </ol>
+      <div class="callout key"><span class="lab">Look at this before you model it</span>Three columns use the text <code>?</code> to mean "no value". You will meet it again, and what you decide it means matters.</div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="step" data-i="1" data-start="8">
+    <div class="step-head"><div class="chk"></div><span class="clock">0:08</span><span class="step-title">Fivetran: connect Postgres and start the sync</span><span class="min">14 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>Build a PostgreSQL to Snowflake connector. The point is not that configuring a connector is hard. It is that it takes a few minutes and then raw tables exist in Snowflake.</p>
+      <ol>
+        <li>In Fivetran, add a destination for your Snowflake database, then a <b>PostgreSQL</b> connector. Host, user and password are on your lab credentials card.</li>
+        <li>Set the destination schema prefix to <code>&lt;firstname&gt;_&lt;lastname&gt;</code> (lowercase). Your data lands in <code>&lt;firstname&gt;_&lt;lastname&gt;_insurance</code>.</li>
+        <li>On the schema screen, select <b>only</b> the <code>insurance</code> schema and its <code>claims</code> table.</li>
+        <li>Save, test, and start the initial sync. Then move on while it runs. Nobody watches a progress bar.</li>
+      </ol>
+      <p>When it finishes, check it in a Snowflake worksheet:</p>
+<pre>select count(*) from &lt;your_database&gt;.&lt;firstname&gt;_&lt;lastname&gt;_insurance.claims;   -- expect 1000
+
+select collision_type, count(*) from &lt;your_database&gt;.&lt;firstname&gt;_&lt;lastname&gt;_insurance.claims
+group by 1 order by 2 desc;                                                     -- look for the '?'</pre>
+      <div class="callout key"><span class="lab">Notice</span><code>_fivetran_synced</code> is not in the source. Fivetran adds it, and it is how you answer "when did this row last change".</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="step" data-i="2" data-start="22">
+    <div class="step-head"><div class="chk"></div><span class="clock">0:22</span><span class="step-title">dbt platform: connect, point at your data, first green build</span><span class="min">16 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <ol>
+        <li>Create your dbt platform project, connect Snowflake, and connect the repo.</li>
+        <li>Create <b>two</b> environments now: a development one, and a <b>production</b> deployment one. Two minutes here saves confusion later.</li>
+      </ol>
+            <p>In the Studio editor, open <code>dbt_project.yml</code> and change one line:</p>
+<pre>source_schema: '&lt;the schema ending in _INSURANCE in your ..._LANDING database&gt;'</pre>
+      <p>The source database is derived for you: your DEV target database with <code>_DEV</code>/<code>_PROD</code> swapped for <code>_LANDING</code>. Set the <code>source_database</code> var only if your data lives elsewhere.</p>
+      <p>Then in the command bar:</p>
+<pre>dbt deps
+dbt build --select staging</pre>
+      <div class="callout cp"><span class="lab">Checkpoint 1: the first hard gate</span>Staging must be green for everyone. If you are red, it is your <code>source_schema</code> or your sync. Nothing in staging is booby-trapped.</div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="step" data-i="3" data-start="38">
+    <div class="step-head"><div class="chk"></div><span class="clock">0:38</span><span class="step-title">dbt Studio and dbt v2 tour</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>Instructor drives, you follow along in <code>models/marts/vw_ins_data_quality.sql</code>. Three beats:</p>
+      <ul>
+        <li><b>Hover a column</b> and see the type dbt v2 (the engine formerly called Fusion) inferred, without running anything.</li>
+        <li><b>Break a <code>ref()</code></b> on purpose and watch the error appear before you run. Then undo it.</li>
+        <li><b>Preview one CTE</b> from the middle of the model. Each CTE is short enough to read on its own.</li>
+      </ul>
+      <p>The view scores completeness, validity and consistency out of 100 for each incident type. Read the comment above <code>completeness</code>: a missing collision type counts as a gap for some incident types and not for others. Why?</p>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="step" data-i="4" data-start="46">
+    <div class="step-head"><div class="chk"></div><span class="clock">0:46</span><span class="step-title">dbt Wizard I: four things are broken, fix them</span><span class="min">32 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p><b>The centre of the lab.</b> Run the whole project:</p>
+<pre>dbt build</pre>
+      <p>It does not go green. Four things in your project are deliberately broken, in three independent branches, so one failure does not hide the rest. Some only appear after you fix another.</p>
+
+      <div class="callout key"><span class="lab">The loop</span>
+        Run, read the failure, ask dbt Wizard, <b>read the diff</b>, accept, run again. Wizard is an agent, not autocomplete: it writes, you stay accountable.
+      </div>
+
+      <p>Start with this one, and keep it open. It works for all four.</p>
+      <div class="prompt"><span class="tag">dbt Wizard: the debug loop</span><button class="copy">Copy</button>
+<pre>This failed when I ran dbt build:
+
+&lt;paste the full error or the failing test name here&gt;
+
+Find the root cause. Look at the model that failed AND the models it selects from, and check column names against what the upstream model actually produces. Tell me what is wrong and why before you change anything. Then propose the smallest fix, and show me the diff before applying it.</pre></div>
+
+      <p>Then match what you see to the right prompt. These do not give away the answer; they make Wizard find it.</p>
+
+      <p><b>If you see a SQL error about an invalid identifier:</b></p>
+      <div class="prompt"><span class="tag">dbt Wizard: compile error</span><button class="copy">Copy</button>
+<pre>This model fails with an "invalid identifier" error. Open the model, then open stg_insurance_claims, and compare the column names the model selects with the column names staging actually outputs. Fix the mismatch and tell me which one was wrong.</pre></div>
+
+      <p><b>If a test fails with rows returned:</b></p>
+      <div class="prompt"><span class="tag">dbt Wizard: failing test, is the model or the test wrong?</span><button class="copy">Copy</button>
+<pre>This singular test returns rows: &lt;test name&gt;.
+
+Do NOT change the test yet. First run dbt show on the model it checks and on the raw data, and tell me with evidence whether the model is producing the wrong number or the test is asking for the wrong thing. If the model is wrong, explain the business rule it breaks, fix it, and show me the diff. If the test is wrong, tell me why.</pre></div>
+
+      <p><b>If a contract fails:</b></p>
+      <div class="prompt"><span class="tag">dbt Wizard: contract mismatch</span><button class="copy">Copy</button>
+<pre>The enforced contract on this model fails. Compare the columns the model SQL produces with the columns the contract declares in the YAML, name and data type. Tell me which side is the one that should change, given what the rest of the project (the Semantic View, the metrics, the tests) already calls this column, and fix the mismatch.</pre></div>
+
+      <div class="callout fb"><span class="lab">Two of the four have a fix that turns the build green and is still wrong</span>
+        Loosening a test until it passes, or labelling a value with something plausible, are both ways to get a green build and a wrong table. Before you accept any diff, ask: does this make the <em>data</em> right, or only the <em>build</em> green? If you are not sure, ask Wizard to show you the rows before and after.
+      </div>
+      <div class="callout cp"><span class="lab">Done when</span><code>dbt build</code> exits green for the four broken things. One test may still report a warning: that is a real data problem (a policy that starts after its own claim) and a warning is the right severity for one row in a thousand.</div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="step" data-i="5" data-start="78">
+    <div class="step-head"><div class="chk"></div><span class="clock">1:18</span><span class="step-title">Break</span><span class="min">7 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body"><p>Stand up. If you are still red, use the break to ask for help or switch to the fallback schema. Do not skip ahead on a broken build.</p></div>
+  </div>
+
+  <!-- 7 -->
+  <div class="step" data-i="6" data-start="85">
+    <div class="step-head"><div class="chk"></div><span class="clock">1:25</span><span class="step-title">dbt Wizard II: build from intent, not just repair</span><span class="min">25 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>Repairing is half of what Wizard is for. Now use it to create things that do not exist yet. Three exercises, in order of value. Do the first for sure.</p>
+
+      <div class="callout key"><span class="lab">How to brief an agent</span>Name the model it should read, state the grain, name the layer, say what contract and tests you expect, and ask it to <b>verify with dbt show</b> before it tells you it is done. A prompt with those four things gets a different quality of answer from "make a fraud table".</div>
+
+      <p><b>Exercise 1: build a mart from a business question (15 min).</b> Where does confirmed fraud concentrate?</p>
+      <div class="prompt"><span class="tag">dbt Wizard: generate a model</span><button class="copy">Copy</button>
+<pre>Create a new mart model called ins_fraud_signals in models/marts, reading from ref('ins_claims').
+
+Goal: show where confirmed fraud concentrates. One row per dimension and value, across these ten dimensions of ins_claims: incident_severity, incident_type, insured_hobbies, insured_occupation, auto_make, policy_state, police_report_available, authorities_contacted, claim_size_band, incident_time_of_day.
+
+Columns: signal_key (dimension and value joined, the primary key), signal_dimension, signal_value, claim_count, fraud_claim_count, fraud_rate, and fraud_lift, which is the value's fraud rate divided by the overall fraud rate.
+
+Only include values with at least 20 claims, because lift on a tiny group means nothing.
+
+Follow the conventions of the other marts: materialized as a table, every column explicitly cast with cast(), no ::, an enforced contract with a data_type for every column, a unique and not_null test on signal_key, and descriptions on every column. Put the YAML in models/marts/_insurance__marts.yml.
+
+When done, run dbt build --select ins_fraud_signals and use dbt show to list the ten rows with the highest fraud_lift. Tell me which three signals stand out and whether the rest look like noise.</pre></div>
+      <ul>
+        <li>Before you accept it, <b>read the SQL</b>. Did it stack the dimensions once, or write ten near-identical queries?</li>
+        <li>Check the contract has all seven columns, and that the 20-claim floor is really in the query.</li>
+        <li>Open the result. How many signals stand out, and how many are noise? Which of them would you hand to a fraud investigator, and which would you <em>not</em> price a policy on?</li>
+      </ul>
+
+      <p><b>Exercise 2: document and test a model that has nothing (5 min).</b> The intermediate models ship with no YAML at all.</p>
+      <div class="prompt"><span class="tag">dbt Wizard: docs and tests</span><button class="copy">Copy</button>
+<pre>int_insurance_claim_enrichment has no YAML. Create models/intermediate/_insurance__intermediate.yml for it. Read the model SQL first, then write a description for the model and for every derived column (age band, policy tenure, claim size band, claim to premium multiple, time of day, vehicle age, confirmed fraud amount), using the thresholds actually in the SQL.
+
+Add tests where they are meaningful: unique and not_null on claim_id, accepted_values on every banded column with exactly the values the CASE expression can produce, and a non-negative check on confirmed_fraud_amount. Use the arguments: form for test arguments. Then run dbt build --select int_insurance_claim_enrichment and tell me if any test fails.</pre></div>
+
+      <p><b>Exercise 3: unit test business logic (5 min).</b> A unit test checks the logic with hand-written rows, no warehouse data.</p>
+      <div class="prompt"><span class="tag">dbt Wizard: unit test</span><button class="copy">Copy</button>
+<pre>Write a dbt unit test for int_insurance_claim_enrichment that checks the claim_size_band thresholds at their exact boundaries: 9999.99 and 10000.00, 49999.99 and 50000.00, 79999.99 and 80000.00. Mock ref('stg_insurance_claims') with inline rows, and only assert on claim_size_band. Add a second assertion on insured_age_band at 29, 30, 59 and 60. Run it with dbt test --select test_type:unit and tell me whether the boundaries behave the way the comments in the model say they should.</pre></div>
+
+      <div class="callout cp"><span class="lab">Done when</span><code>ins_fraud_signals</code> builds, its contract is enforced, and you can name the three strongest signals out loud.</div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="step" data-i="7" data-start="110">
+    <div class="step-head"><div class="chk"></div><span class="clock">1:50</span><span class="step-title">Semantic layer: the same metrics, defined two ways</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>Open two files side by side:</p>
+      <ul>
+        <li><code>models/marts/sv_ins_claims_fraud.sql</code>: a <b>Snowflake Semantic View</b>, defined as a dbt model. Cortex Analyst reads it if you use the optional Snowflake-native path.</li>
+        <li><code>models/marts/_insurance__marts.yml</code>, the <code>metrics:</code> block under <code>ins_claims</code>: the <b>dbt Semantic Layer</b> definitions, served through the dbt MCP Server.</li>
+      </ul>
+      <p>The question to leave with is not "which is better". It is: where should the definition of fraud rate live, and who else needs to read it?</p>
+      <div class="prompt"><span class="tag">dbt Wizard: compare the two layers</span><button class="copy">Copy</button>
+<pre>Compare the metrics in sv_ins_claims_fraud.sql with the metrics: block under ins_claims in _insurance__marts.yml. List every metric that exists in only one of them and explain why it cannot exist in the other. Then check that fraud_rate, fraud_cost_share and portfolio_claim_to_premium_multiple are defined identically in both, and tell me if any of them would return a different number.</pre></div>
+      <div class="callout fb"><span class="lab">Find the honest difference</span>One metric exists in only one layer, because MetricFlow has no standard-deviation aggregation. Two layers, same business, not always the same set of numbers. Better to find that here than in a meeting.</div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="step" data-i="8" data-start="118">
+    <div class="step-head"><div class="chk"></div><span class="clock">1:58</span><span class="step-title">Ship to production: job, docs, dbt Catalog</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <ol>
+        <li>Commit your work to a branch and merge it into the branch your production environment tracks, or point the production environment at your working branch for the lab.</li>
+        <li>Create a job in your <b>production</b> environment running <code>dbt build</code>, with <b>Generate docs on run</b> switched on. Run it. Run it a second time: unchanged models are skipped by dbt State.</li>
+        <li>Open <b>Catalog</b> from the top navigation. Click <b>Explore Lineage</b> and find <code>ins_claims</code>. Look at its Details: <b>contracted: true</b> is the contract you enforced, published as a fact anyone can look up.</li>
+        <li>Look at the lineage downstream of the marts. You will see an <b>exposure</b>, <code>ins_fraud_command_centre</code>. It is the Streamlit app you build in a few minutes, already in the graph.</li>
+      </ol>
+      <div class="callout cp"><span class="lab">Checkpoint 2: the second hard gate</span>The production job must succeed and generate docs. The next sections read what it built. Without it Catalog is empty and the Columns tab is blank.</div>
+      <div class="callout fb"><span class="lab">Explore Mode reads production</span>The next step answers questions about <em>production</em> data, so the production job has to have succeeded first. It also reads through an analytics credential the instructor set up, which can only see the three marts.</div>
+      <div class="callout fb"><span class="lab">Snowflake grants</span>A <code>dbt build</code> recreates tables and drops the grants on them. Ask the instructor to re-run the grants after your job, or Explore Mode and the Streamlit app will not be able to read the marts. This is the single most common "it worked a minute ago" in the next two sections.</div>
+      <div class="callout key"><span class="lab">Why this matters</span>dbt Catalog and the dbt MCP Server read the same metadata through the same Discovery API. Catalog shows it to a human; the MCP Server hands it to an agent. Good AI answers come from descriptions, tests, contracts and metric definitions, which is to say from the pull request, not the prompt.</div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="step" data-i="9" data-start="130">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:10</span><span class="step-title">Ask your data with dbt Wizard Explore Mode</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>You have just seen exactly what metadata exists. Now watch an agent use it, without leaving the dbt platform and without writing any SQL.</p>
+      <ol>
+        <li>Open the <b>dbt Wizard home tab</b>.</li>
+        <li>Click the <b>Agent mode</b> button at the bottom left of the Wizard panel and choose <b>Explore only</b>. In this mode Wizard can query and explain data but cannot edit files or run builds.</li>
+        <li>Ask a question. Name the time period, the grouping and the filter. Then ask a follow-up in the same conversation.</li>
+        <li>Switch between <b>Chart</b>, <b>Table</b> and <b>SQL</b>. The SQL view shows the query or the governed metric behind the answer, and you can copy it.</li>
+      </ol>
+      <div class="prompt"><span class="tag">Explore Mode: start here</span><button class="copy">Copy</button>
+<pre>In January and February 2015, what is the fraud rate by incident severity?</pre></div>
+      <p>Then follow up, and work through these. Pick any three and keep the SQL for the next step.</p>
+      <div class="prompt"><span class="tag">Explore Mode: follow-up</span><button class="copy">Copy</button>
+<pre>Now break that out by policy state, and show me only Major Damage claims.</pre></div>
+      <div class="prompt"><span class="tag">Explore Mode: the questions</span><button class="copy">Copy</button>
+<pre>1. Which hobbies of the insured have the highest fraud rate in January and February 2015? Show the number of claims behind each rate.
+2. How much did confirmed fraud cost us, and what share of total claimed is that?
+3. What is the average claim amount by incident type?
+4. Which policy state and coverage level has the highest claim to premium multiple?
+5. What is the fraud rate when there is no police report compared with when there is one?
+6. Compare the average and the median claim amount by claim size band.</pre></div>
+      <div class="callout key"><span class="lab">Read the SQL, every time</span>The answer is only as good as what sits behind it. For each question, open the <b>SQL</b> view and check one thing: did Wizard use a <b>governed metric</b> (<code>fraud_rate</code>, <code>total_claimed</code>) or write its own query against a table? A metric means the definition lives in a pull request. A hand-written query means you are trusting the prompt.</div>
+      <div class="callout key"><span class="lab">The governance beat</span>Ask: <i>"What is the postcode of the insured on claim 100?"</i> and see what happens. The postcode and the incident address were left out of every mart on purpose, and Explore Mode only reads what its credential can read. Note whether it answers, and where the control actually sits: in the model, or in the grants.</div>
+      <div class="callout fb"><span class="lab">Two more experiments</span>Ask for the "loss ratio" and see what Wizard calls the number. The data compares two months of claims with a year of premium, so values near 40 are normal and it is a claim to premium multiple. Then ask something no metric covers, for example fraud rate by vehicle model, and see whether Wizard tells you it left the governed metrics.</div>
+      <div class="callout fb"><span class="lab">Optional, Snowflake-native</span>If your instructor set it up, you can ask the same questions in Snowflake Intelligence through the <code>HOL_INS_ANALYST</code> agent, which reads the Snowflake Semantic View. Compare the two answers for the same question.</div>
+    </div>
+  </div>
+
+  <!-- 11 -->
+  <div class="step" data-i="10" data-start="142">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:22</span><span class="step-title">Build the Streamlit app in Snowflake</span><span class="min">23 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>The last layer. The same governed marts that fed the agent now feed a small app for a human. Nothing in it recomputes a definition.</p>
+      <ol>
+        <li>Snowsight, <b>Projects</b>, <b>Streamlit</b>, <b>+ Streamlit App</b>.</li>
+        <li>Title <code>claims_fraud_command_centre</code>. Choose the <b>database and schema where your production job built the marts</b>, and a warehouse.</li>
+        <li>Delete the starter code. Paste in the contents of <code>streamlit_app/streamlit_app.py</code> from the repo. Press <b>Run</b>.</li>
+        <li>If it says it cannot read <code>ins_claims</code>, fix the database and schema in the sidebar. No code change needed.</li>
+      </ol>
+      <div class="callout key"><span class="lab">From Explore Mode to the app</span>Take one answer you liked in the last step, open its <b>SQL</b> view and copy the query. You will paste it into the app as a new tile. Replace the table names with the helper the app already uses, <code>table('ins_claims')</code>, so it follows the sidebar's database and schema.</div>
+      <p>Check the numbers against what Explore Mode told you:</p>
+      <table class="grid">
+        <tr><th>Where</th><th>What you should see</th></tr>
+        <tr><td>Overview tiles</td><td>1,000 claims, a fraud rate of 24.7%</td></tr>
+        <tr><td>Fraud rate by severity</td><td>One severity far above the rest</td></tr>
+        <tr><td>Where fraud concentrates</td><td>Two hobbies far above the rest</td></tr>
+        <tr><td>Incident profile</td><td>22 rows. Collision type on thefts and parked cars should read the same as in your fix</td></tr>
+        <tr><td>Portfolio</td><td>9 rows, claim to premium multiple in the high 30s to mid 40s</td></tr>
+      </table>
+      <div class="callout key"><span class="lab">Three surfaces, one number</span>The fraud rate in this app, the <code>fraud_rate</code> metric in dbt, and the answer Explore Mode gave you should agree. If they do not, one of them is reading something it should not, or Explore wrote its own query instead of using the metric.</div>
+
+      <p><b>Your task: add one tile, chart or filter.</b> Look for the <code>TODO</code> at the bottom of the file. The best source is an Explore answer: paste its SQL in as a new tile. Or use any AI assistant you like in the Streamlit editor. Give it the context:</p>
+      <div class="prompt sf"><span class="tag">Extend the app</span><button class="copy">Copy</button>
+<pre>I have a Streamlit in Snowflake app that reads the dbt marts ins_claims, ins_policy_portfolio and ins_incident_profile. Read the existing code, then add a selectbox in the sidebar to filter by insured_age_band, and add it to the `conditions` list so every claim-level tile responds. Keep the plain SQL style and do not recompute any metric that already exists. Also add a tile for the share of claims where police_report_available is 'No' or 'Unknown'.</pre></div>
+
+      <p><b>Stretch: close the loop from model to consumer.</b> The app has a panel that appears the moment <code>ins_fraud_signals</code> exists. If your production job built it in step 7, check the Where fraud concentrates tab. If it is not there, your job is not building it or your grants are stale.</p>
+      <div class="prompt"><span class="tag">dbt Wizard: a new mart for the app</span><button class="copy">Copy</button>
+<pre>Create a mart ins_claims_weekly from ref('ins_claims'): one row per week of incident_date (date_trunc('week')), with claim_count, total_claimed, fraud_claim_count and fraud_rate. Primary key is the week start date. Enforce a contract, add unique and not_null on the key, cast every column explicitly, and verify with dbt show. Then tell me what a week-by-week chart of a two month window can and cannot tell us.</pre></div>
+    </div>
+  </div>
+
+  <!-- 12 -->
+  <div class="step" data-i="11" data-start="165">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:45</span><span class="step-title">Wrap: pull request, and what you built</span><span class="min">10 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>Commit and open a pull request against your own fork. Do not merge: the point is that the change is <em>reviewable</em>, not that it ships. Read the diff as a reviewer would:</p>
+      <ul>
+        <li>Four small fixes, each one a line or two, each one explainable in a sentence.</li>
+        <li>Three new things Wizard wrote: a mart, some documentation and tests, and a unit test.</li>
+        <li>A contract on every mart that says exactly what is allowed out.</li>
+      </ul>
+      <p>The full loop, done: <b>raw</b> table in Postgres, <b>landed</b> by Fivetran, <b>modelled and governed</b> in dbt, <b>catalogued</b>, <b>asked in English</b>, and <b>shipped as an app</b>.</p>
+      <div class="callout ok"><span class="lab">Take-home</span>Which of the four fixes would you have caught without a test? Which would you have caught without Wizard? And what did you accept from Wizard that you could not have explained yourself?</div>
+    </div>
+  </div>
+
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>If you get stuck</h2>
+  <table class="grid">
+    <tr><th>Symptom</th><th>Most likely cause</th></tr>
+        <tr><td><code>invalid identifier</code> on a source column</td><td>Wrong <code>source_schema</code>, or your sync has not finished.</td></tr>
+    <tr><td>Staging red at Checkpoint 1</td><td>Same as above. Nothing in staging is broken on purpose.</td></tr>
+    <tr><td>Catalog is empty</td><td>The production job has not run, or ran without <b>Generate docs on run</b>.</td></tr>
+    <tr><td>App returns nothing, no error</td><td>Grants on the marts were dropped by the last build. Ask the instructor to re-run them.</td></tr>
+    <tr><td>Explore only is not in the Agent mode picker</td><td>Experimental features are not enabled on the account, or the plan does not include Explore Mode. Ask the instructor.</td></tr>
+    <tr><td>Wizard asks you to set up credentials</td><td>The project has no analytics credential, or the connection is not selected under Analytics configuration. Ask the instructor.</td></tr>
+    <tr><td>Explore Mode cannot answer, or finds no data</td><td>The production job has not succeeded, or its grants were dropped. Run the job, then ask the instructor to re-run the grants.</td></tr>
+    <tr><td>Streamlit says it cannot read <code>ins_claims</code></td><td>Database or schema in the app sidebar is not where the job wrote the marts.</td></tr>
+    <tr><td>Wizard "fixed" it and the build is green, but the numbers look off</td><td>Ask it to show you the rows before and after. A green build is not a correct table.</td></tr>
+  </table>
+</section>
+
+<footer>
+  <div class="wrap">Fivetran, Snowflake and dbt insurance lab. Track notes: <code>README.md</code>.</div>
+</footer>
+
+<div id="pill"><b><span id="pilln">0</span> / 12</b> steps done<div id="clockline"></div></div>
+
+<script>
+(function(){
+  var KEY = 'insurance-lab-guide-v1';
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+  var store = {done:{}, started:null};
+  try { store = Object.assign(store, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {} }
+
+  function render(){
+    var n = 0;
+    steps.forEach(function(s){
+      var i = s.dataset.i, d = !!store.done[i];
+      s.classList.toggle('done', d);
+      s.querySelector('.chk').textContent = d ? '✓' : '';
+      if (d) n++;
+    });
+    document.getElementById('pilln').textContent = n;
+    document.getElementById('progress').style.width = (n / steps.length * 100) + '%';
+    var open = document.querySelectorAll('.step.open').length;
+    document.getElementById('openhint').textContent = open + ' of ' + steps.length + ' open';
+  }
+
+  steps.forEach(function(s){
+    s.querySelector('.step-head').addEventListener('click', function(e){
+      if (e.target.classList.contains('chk')) return;
+      s.classList.toggle('open'); render();
+    });
+    s.querySelector('.chk').addEventListener('click', function(e){
+      e.stopPropagation();
+      store.done[s.dataset.i] = !store.done[s.dataset.i];
+      save(); render();
+    });
+  });
+  document.getElementById('expand').onclick = function(){ steps.forEach(function(s){ s.classList.add('open'); }); render(); };
+  document.getElementById('collapse').onclick = function(){ steps.forEach(function(s){ s.classList.remove('open'); }); render(); };
+  document.getElementById('reset').onclick = function(){
+    if (!confirm('Clear all ticked steps and the lab clock?')) return;
+    store = {done:{}, started:null}; save(); render(); tick();
+  };
+  document.getElementById('startclock').onclick = function(){
+    store.started = Date.now(); save(); tick();
+  };
+
+  // ---- copy buttons on every prompt ----
+  Array.prototype.forEach.call(document.querySelectorAll('.prompt'), function(p){
+    var b = p.querySelector('.copy'), pre = p.querySelector('pre');
+    b.addEventListener('click', function(){
+      var text = pre.innerText.replace(/\n+$/, '');
+      function done(){ b.textContent = 'Copied'; b.classList.add('ok'); setTimeout(function(){ b.textContent = 'Copy'; b.classList.remove('ok'); }, 1400); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t);
+        t.select(); try { document.execCommand('copy'); done(); } catch(e) {} document.body.removeChild(t);
+      }
+    });
+  });
+
+  // ---- lab clock: where you should be ----
+  function fmt(m){ var h = Math.floor(m / 60), mm = m % 60; return h + ':' + (mm < 10 ? '0' : '') + mm; }
+  function tick(){
+    var line = document.getElementById('clockline');
+    steps.forEach(function(s){ s.classList.remove('now'); });
+    if (!store.started) { line.innerHTML = ''; document.getElementById('startclock').textContent = 'Start lab clock'; return; }
+    document.getElementById('startclock').textContent = 'Restart lab clock';
+    var el = Math.floor((Date.now() - store.started) / 60000), cur = 0;
+    steps.forEach(function(s, i){ if (el >= +s.dataset.start) cur = i; });
+    steps[cur].classList.add('now');
+    var firstOpen = steps.findIndex(function(s){ return !store.done[s.dataset.i]; });
+    var msg = '';
+    if (firstOpen === -1) msg = '<span class="ahead">All steps done</span>';
+    else if (firstOpen < cur) msg = '<span class="behind">Behind: you are on step ' + (firstOpen + 1) + ', the clock says step ' + (cur + 1) + '</span>';
+    else msg = '<span class="ahead">On pace for step ' + (cur + 1) + '</span>';
+    line.innerHTML = 'Elapsed ' + fmt(el) + '<br>' + msg;
+  }
+  setInterval(tick, 30000);
+
+  // open the first undone step by default
+  var first = steps.findIndex(function(s){ return !store.done[s.dataset.i]; });
+  if (first === -1) first = 0;
+  steps[first].classList.add('open');
+  render(); tick();
+})();
+</script>
+</body>
+</html>
