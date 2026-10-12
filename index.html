@@ -162,10 +162,10 @@
 
   <!-- 1 -->
   <div class="step" data-i="0" data-start="0">
-    <div class="step-head"><div class="chk"></div><span class="clock">0:00</span><span class="step-title">Welcome, fork the repo, meet the data</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-head"><div class="chk"></div><span class="clock">0:00</span><span class="step-title">Welcome, meet the repo, meet the data</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <ol>
-        <li>Use the repo your instructor gave you (<code>dbt-insurance-lab-hol</code> in the dbt-Hands-on-Labs org, or a copy of it). Create a branch in the dbt IDE before you edit.</li>
+        <li>Use the repo your instructor gave you (<code>dbt-insurance-lab-hol</code> in the dbt-Hands-on-Labs org, or a copy of it). You create your own branch in the dbt platform step, before you edit anything.</li>
         <li>The dbt project sits at the repo root, so you will edit <code>dbt_project.yml</code> and the models directly.</li>
         <li>The data: one table, <code>claims</code>, 1,000 rows. One row per auto insurance claim, with the policy, the insured, the incident, the amounts, the vehicle, and whether the claim was confirmed as fraud.</li>
       </ol>
@@ -490,7 +490,7 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
         <li>Complete the State step first: the original <code>10000</code> threshold must be restored. Confirm you are on your <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code>.</li>
         <li>Under <b>Version control</b>, read the list of changed files before you commit. Commit and sync can include everything, so if there are unrelated edits, ask dbt Wizard to commit only the files you meant to change and review the proposed list before approving.</li>
         <li>Use <b>Go to repository</b>, sign in to GitHub if needed, and verify your remote branch holds your changes and no temporary threshold. Record the exact branch name and the commit SHA as <code>&lt;DEPLOY_BRANCH&gt;</code> and <code>&lt;DEPLOY_COMMIT&gt;</code>.</li>
-        <li>Do not merge into, or push directly to, a protected or shared default branch. If repository policy blocks your branch, ask the instructor rather than changing branch protections.</li>
+        <li>Pull requests are disabled in this lab: push to your own branch only. Do not merge into, or push directly to, a protected or shared default branch. If repository policy blocks your branch, ask the instructor rather than changing branch protections.</li>
       </ol>
 
       <h4>B. Confirm your deployment environment</h4>
@@ -532,7 +532,7 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
       <div class="callout cp"><span class="lab">Checkpoint 2: the second hard gate</span>The production job must succeed and generate docs. The next sections read what it built. Without it Catalog is empty and the Columns tab is blank.</div>
       <div class="callout fb"><span class="lab">Explore Mode reads production</span>The next step answers questions about <em>production</em> data, so the production job has to have succeeded first. It also reads through an analytics credential the instructor set up, which can only see the three marts.</div>
       <div class="callout fb"><span class="lab">Snowflake grants</span>A <code>dbt build</code> recreates tables and drops the grants on them. Ask the instructor to re-run the grants after your job, or Explore Mode and the Streamlit app will not be able to read the marts. This is the single most common "it worked a minute ago" in the next two sections.</div>
-      <div class="callout key"><span class="lab">Why this matters</span>dbt Catalog and the dbt MCP Server read the same metadata through the same Discovery API. Catalog shows it to a human; the MCP Server hands it to an agent. Good AI answers come from descriptions, tests, contracts and metric definitions, which is to say from the pull request, not the prompt.</div>
+      <div class="callout key"><span class="lab">Why this matters</span>dbt Catalog and the dbt MCP Server read the same metadata through the same Discovery API. Catalog shows it to a human; the MCP Server hands it to an agent. Good AI answers come from descriptions, tests, contracts and metric definitions, which is to say from reviewed code, not the prompt.</div>
     </div>
   </div>
 
@@ -601,9 +601,13 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
 
   <!-- 12 -->
   <div class="step" data-i="12" data-start="177">
-    <div class="step-head"><div class="chk"></div><span class="clock">2:57</span><span class="step-title">Wrap: pull request, and what you built</span><span class="min">10 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-head"><div class="chk"></div><span class="clock">2:57</span><span class="step-title">Wrap: review your branch, and what you built</span><span class="min">10 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
-      <p>Commit and open a pull request against your own fork. Do not merge: the point is that the change is <em>reviewable</em>, not that it ships. Read the diff as a reviewer would:</p>
+      <p>You cannot open pull requests in this lab, and you do not need to. Your work lives on your own <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code>. The point is that the change is <em>reviewable</em>, not that it ships, so nothing gets merged.</p>
+      <ul>
+        <li>Make sure everything you want to keep is committed and pushed to your branch (see the commit step under Ship to production). Do not open a pull request and do not merge.</li>
+        <li>Open <b>Version control</b> and the branch on GitHub, and read the diff as a reviewer would:</li>
+      </ul>
       <ul>
         <li>Four small fixes, each one a line or two, each one explainable in a sentence.</li>
         <li>Three new things Wizard wrote: a mart, some documentation and tests, and a unit test.</li>
