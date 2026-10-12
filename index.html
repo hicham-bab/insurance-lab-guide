@@ -76,6 +76,7 @@
   .step-body{display:none; padding:2px 20px 20px 54px}
   .step.open .step-body{display:block}
   .step-body p{margin:.5em 0}
+  .step-body h4{margin:18px 0 4px; font-size:14px}
   .step-body ul,.step-body ol{margin:.4em 0; padding-left:20px}
   .step-body li{margin:.3em 0}
   .step-body code{background:#0b0f14; padding:2px 6px; border-radius:5px; font-size:12.5px}
@@ -190,23 +191,59 @@ group by 1 order by 2 desc;                                                     
 
   <!-- 3 -->
   <div class="step" data-i="2" data-start="22">
-    <div class="step-head"><div class="chk"></div><span class="clock">0:22</span><span class="step-title">dbt platform: connect, point at your data, first green build</span><span class="min">16 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-head"><div class="chk"></div><span class="clock">0:22</span><span class="step-title">dbt platform: log in, set credentials, branch, first green build</span><span class="min">16 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
+      <h4>A. Accept the invite and log in</h4>
       <ol>
-        <li>Create your dbt platform project, connect Snowflake, and connect the repo.</li>
-        <li><b>Set your development credentials before you open the Studio editor.</b> Go to your profile, then <b>Credentials</b>, pick this project, and enter your Snowflake username and authentication (key pair or password, as on your credentials card) and a target <b>schema</b> of your own, for example <code>dbt_&lt;firstname&gt;_&lt;lastname&gt;</code>. Without this the editor will not run anything.</li>
-        <li>Create <b>two</b> environments now: a development one, and a <b>production</b> deployment one. Two minutes here saves confusion later.</li>
+        <li>Open the email titled <b>A colleague invites you to collaborate with them in dbt Cloud</b> (from <code>support@getdbt.com</code>) and click <b>Join Partner Hands-on Labs</b>.</li>
+        <li>Fill in the form: first name, last name, a password and the confirmation. Tick <b>I agree to dbt's Terms of Service</b> and click <b>Get started</b>.</li>
+        <li>Record these credentials. You may need them to log back in during the lab.</li>
+        <li>Once logged in, click <b>Project</b> in the left navigation bar and select the project. Only one project starting with <code>LAB_DBT</code> should be visible.</li>
+        <li>Click <b>Studio</b> in the left navigation bar.</li>
       </ol>
-      <p>Before you edit anything, confirm the exact schema Fivetran created. In a Snowflake worksheet:</p>
+
+      <h4>B. Set your personal developer credentials</h4>
+      <p>Do this before you touch any code. Without credentials the Studio cannot run anything.</p>
+      <ol>
+        <li>Click <b>Status: Disconnected</b> to open the Server status. It will tell you credentials are missing.</li>
+        <li>Click <b>View Credentials</b> to open the pane for your development credentials.</li>
+        <li>In <b>Connection details</b>, set <b>Database</b> to the development database for your lab (the name ends in <code>_DEV</code>). Do not leave it blank and do not use the shared <code>LABSTUDIOS</code> database.</li>
+        <li>For <b>Auth method</b>, select <b>Key pair</b>.</li>
+        <li>Enter the <b>Username</b> from your 1Password link.</li>
+        <li>Enter the <b>Private key</b> from your 1Password link.</li>
+        <li><b>Do not</b> enter a private key passphrase. Leave it blank.</li>
+        <li>Set <b>Schema</b> to <code>dbt_&lt;firstname&gt;_&lt;lastname&gt;</code>, with your real first and last name.</li>
+        <li>Leave <b>Target name</b> and <b>Threads</b> at their defaults. Target name is only a dbt profile label; the Database field decides which Snowflake database receives your models.</li>
+        <li>Click <b>Save</b> (top right), then reload the page. Server status should now say <b>Connected</b>.</li>
+      </ol>
+
+      <h4>C. Create your branch</h4>
+      <ol>
+        <li>In the left navigation bar click <b>Create branch</b>.</li>
+        <li>Name it <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code> and click <b>Create branch</b>.</li>
+      </ol>
+      <div class="callout cp"><span class="lab">Checkpoint: dbt platform setup</span>Your development environment is connected to Snowflake with your own credentials, and you have an isolated branch in the connected GitHub repository to work in.</div>
+
+      <h4>D. Point the project at your data and run the first build</h4>
+      <p>Record these five names from your own lab now. You will reuse them in later steps.</p>
+      <table class="grid">
+        <tr><th>Name</th><th>Where to find it</th></tr>
+        <tr><td><code>&lt;LANDING_DATABASE&gt;</code></td><td>The Snowflake database ending in <code>_LANDING</code></td></tr>
+        <tr><td><code>&lt;SOURCE_SCHEMA&gt;</code></td><td>The schema Fivetran created, <code>POSTGRES_INSURANCE</code> if the connection is named <code>postgres</code></td></tr>
+        <tr><td><code>&lt;DEV_DATABASE&gt;</code></td><td>The Database in your personal credentials, ending in <code>_DEV</code></td></tr>
+        <tr><td><code>&lt;DBT_SCHEMA&gt;</code></td><td>Your personal dbt schema, <code>dbt_&lt;firstname&gt;_&lt;lastname&gt;</code></td></tr>
+        <tr><td><code>&lt;LAB_WAREHOUSE&gt;</code></td><td>The Snowflake warehouse your instructor provided</td></tr>
+      </table>
+      <p>Confirm the exact schema Fivetran created. In a Snowflake worksheet:</p>
 <pre>show schemas like '%INSURANCE' in database &lt;your_database&gt;_LANDING;</pre>
-      <p>In the Studio editor, open <code>dbt_project.yml</code> and change one line to the name that query returned (the repo used to ship <code>insurance</code>, which does not exist in your database):</p>
+      <p>In the Studio editor, open <code>dbt_project.yml</code>. The repo ships with the right default for a connection named <code>postgres</code>:</p>
 <pre>source_schema: 'postgres_insurance'</pre>
-      <p>If <code>show schemas</code> returned a different name (for example because you named the connection something else), use that instead.</p>
-      <p>The source database is derived for you: your DEV target database with <code>_DEV</code>/<code>_PROD</code> swapped for <code>_LANDING</code>. Set the <code>source_database</code> var only if your data lives elsewhere.</p>
+      <p>If <code>show schemas</code> returned a different name, put that one here instead. The source database is derived for you: your <code>_DEV</code> database with <code>_DEV</code>/<code>_PROD</code> swapped for <code>_LANDING</code>. Set the <code>source_database</code> var only if your data lives elsewhere.</p>
       <p>Then in the command bar:</p>
 <pre>dbt deps
 dbt build --select staging</pre>
-      <div class="callout cp"><span class="lab">Checkpoint 1: the first hard gate</span>Staging must be green for everyone. If you are red, it is your <code>source_schema</code> or your sync. Nothing in staging is booby-trapped.</div>
+      <div class="callout cp"><span class="lab">Checkpoint 1: the first hard gate</span>Staging must be green for everyone. If you are red, it is your <code>source_schema</code>, your credentials Database field, or your sync. Nothing in staging is booby-trapped.</div>
+      <div class="callout fb"><span class="lab">Instructor note</span>The production deployment environment is set up for the later job step. If your instructor has not created it for you, ask before that step.</div>
     </div>
   </div>
 
@@ -314,9 +351,51 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
     </div>
   </div>
 
-  <!-- 8 -->
+  <!-- State -->
   <div class="step" data-i="7" data-start="110">
-    <div class="step-head"><div class="chk"></div><span class="clock">1:50</span><span class="step-title">Semantic layer: the same metrics, defined two ways</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-head"><div class="chk"></div><span class="clock">1:50</span><span class="step-title">dbt State: change one threshold, watch what rebuilds</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-body">
+      <p>dbt State decides whether a selected resource needs work from code changes, dependencies and data state. That is different from a manual <code>state:modified</code> selector. You will keep the build command identical, change one upstream expression, and read State's decisions.</p>
+      <div class="callout key"><span class="lab">Prerequisite</span>Your instructor or account admin must have made dbt v2 and dbt State available for the lab. Do not start an account trial or change shared environments or jobs. If either option is missing below, ask the instructor.</div>
+
+      <h4>A. Switch your own Studio to dbt v2 and enable State</h4>
+      <ol>
+        <li>In Studio, click <b>dbt version</b> in the bottom status bar. In the <b>Development environment</b> panel click <b>Edit</b> beside <b>Personal version override</b>. Use this, not <b>Edit environment</b>, which opens the shared project setting.</li>
+        <li>In <b>User development settings</b>, set the dbt version dropdown to <b>v2 Stable</b> (the UI may also label it Preview, or formerly Fusion Stable). Click <b>Save and Restart</b> and wait for <b>Status: Compiled</b>.</li>
+        <li>Open your profile menu, go to <b>Settings</b>, then <b>Credentials</b>. Search for and select your lab project, then click <b>Edit</b>.</li>
+        <li>Scroll to <b>User development settings</b> and set <b>dbt State</b> to <b>Enabled</b> (if it says Disabled, inherited from development environment). Keep the v2 Stable selection, database, schema and credentials as they are, and click <b>Save</b>.</li>
+        <li>Return to Studio, open <b>More IDE options</b>, then <b>Restart Studio</b>, then <b>Restart</b>. Wait for <b>Status: Compiled</b>.</li>
+      </ol>
+
+      <h4>B. Baseline and unchanged rerun</h4>
+      <p>Confirm which relations the focused selection targets before you build. Every model should sit in your <code>_DEV</code> database:</p>
+<pre>dbt ls --select +ins_claims --resource-type model --output json --output-keys unique_id name database schema alias resource_type</pre>
+      <p>Run the focused build and keep its final result as your baseline:</p>
+<pre>dbt build --select +ins_claims</pre>
+      <p>In <b>Commands</b>, expand that run's <b>System logs</b> and check two things: the runtime is 2.x, and the log says <code>dbt State is enabled</code>. The older Fusion label can still appear in v2 logs. Record the version your run actually reports, not just the status bar. If it still says v1 or State disabled, ask the instructor before going on. Do not describe a normal dbt run as State reuse.</p>
+      <p>Now, without editing files or changing variables, run the exact same command again. Record the built, reused and tested counts of both runs and compare them. Use State's decision messages as the evidence, not elapsed time. State may already hold reusable results from an earlier build, so the first run you record does not necessarily execute everything, and a cold history may execute the selected nodes to establish reuse. Do not clear State to reproduce anyone else's table.</p>
+
+      <h4>C. Change a claims-routing threshold, then restore it</h4>
+      <p>Take a baseline of the size-band mix first:</p>
+<pre>dbt show --inline "select claim_size_band, count(*) as claims, sum(total_claim_amount) as amount from {{ ref('ins_claims') }} group by 1 order by 2 desc" --limit 10</pre>
+      <ol>
+        <li>Open <code>models/intermediate/int_insurance_claim_enrichment.sql</code>. Save the original line somewhere:
+<pre>when total_claim_amount &lt; 10000 then 'Minor'</pre></li>
+        <li>Temporarily replace only that line with a higher threshold. This simulates a claims manager changing the routing rule in transformation logic; it does not touch Postgres or the Fivetran data.
+<pre>when total_claim_amount &lt; 20000 then 'Minor'</pre></li>
+        <li>Save, then run the same focused build. Read State's decisions for the changed model and everything downstream of it, and use <b>Lineage</b> to explain why <code>ins_claims</code> depends on the changed expression.</li>
+        <li>Run the baseline query again. More claims should now be <b>Minor</b>, and the total number of claims should be unchanged.</li>
+        <li>Restore the exact original line, save, and run the build once more. Run the size-band query a last time and confirm you are back to your baseline.</li>
+        <li>Review the file diff under <b>Version control</b>. The temporary <code>20000</code> must be gone before you move on.</li>
+      </ol>
+      <div class="callout fb"><span class="lab">Read the evidence carefully</span>Views expose upstream data dynamically, so a downstream view can show changed values even if State reuses its unchanged definition. Reuse decisions for models and tests can differ, so do not assume every node skips, every downstream node rebuilds, or warehouse usage becomes free. A reused test was not re-executed. This exercise shows a code change on a static dataset, not live source-freshness detection.</div>
+      <div class="callout cp"><span class="lab">Checkpoint: State and restoration</span>Your personal runtime is dbt v2 and State is enabled, confirmed in the logs. You recorded baseline, unchanged, changed and restored outcomes, and the original threshold is back.</div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="step" data-i="8" data-start="122">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:02</span><span class="step-title">Semantic layer: the same metrics, defined two ways</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <p>Open two files side by side:</p>
       <ul>
@@ -331,14 +410,54 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
   </div>
 
   <!-- 9 -->
-  <div class="step" data-i="8" data-start="118">
-    <div class="step-head"><div class="chk"></div><span class="clock">1:58</span><span class="step-title">Ship to production: job, docs, dbt Catalog</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
+  <div class="step" data-i="9" data-start="130">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:10</span><span class="step-title">Ship to production: job, docs, dbt Catalog</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
+      <p>A deploy job runs code from a <b>remote Git branch</b>. It cannot see files that exist only in Studio, so commit and push first.</p>
+
+      <h4>A. Commit and push your branch</h4>
       <ol>
-        <li>Commit your work to a branch and merge it into the branch your production environment tracks, or point the production environment at your working branch for the lab.</li>
-        <li>Create a job in your <b>production</b> environment running <code>dbt build</code>, with <b>Generate docs on run</b> switched on. Run it. Run it a second time: unchanged models are skipped by dbt State.</li>
-        <li>Open <b>Catalog</b> from the top navigation. Click <b>Explore Lineage</b> and find <code>ins_claims</code>. Look at its Details: <b>contracted: true</b> is the contract you enforced, published as a fact anyone can look up.</li>
-        <li>Look at the lineage downstream of the marts. You will see an <b>exposure</b>, <code>ins_fraud_command_centre</code>. It is the Streamlit app you build in a few minutes, already in the graph.</li>
+        <li>Complete the State step first: the original <code>10000</code> threshold must be restored. Confirm you are on your <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code>.</li>
+        <li>Under <b>Version control</b>, read the list of changed files before you commit. Commit and sync can include everything, so if there are unrelated edits, ask dbt Wizard to commit only the files you meant to change and review the proposed list before approving.</li>
+        <li>Use <b>Go to repository</b>, sign in to GitHub if needed, and verify your remote branch holds your changes and no temporary threshold. Record the exact branch name and the commit SHA as <code>&lt;DEPLOY_BRANCH&gt;</code> and <code>&lt;DEPLOY_COMMIT&gt;</code>.</li>
+        <li>Do not merge into, or push directly to, a protected or shared default branch. If repository policy blocks your branch, ask the instructor rather than changing branch protections.</li>
+      </ol>
+
+      <h4>B. Confirm your deployment environment</h4>
+      <p>You need an environment that runs from your branch and writes to a schema of its own. Your instructor may have created it, or may give you the permissions to create it yourself (a Developer seat alone has read-only environment access; project-scoped Job Admin is what unlocks <b>Create environment</b>). Ask before you improvise, and never edit a shared environment or profile.</p>
+      <ol>
+        <li>Go to <b>Orchestration</b>, then <b>Environments</b>. Open your environment, or <b>Create environment</b> and name it <code>deploy_&lt;firstname&gt;_&lt;lastname&gt;</code>.</li>
+        <li>Choose <b>Deployment</b> as the type and check the deployment type before saving. The creation form can default to Production.</li>
+        <li>Confirm <b>dbt version</b> is <b>v2 Stable</b>. This is separate from your personal Studio override and does not carry over.</li>
+        <li>Select <b>Only run on a custom branch</b> and enter the exact <code>&lt;DEPLOY_BRANCH&gt;</code>. Otherwise jobs check out the repository default branch, which does not have your work.</li>
+        <li>Under dbt State, select <b>Enable dbt State</b>. Your personal State setting does not configure the environment.</li>
+        <li>Under <b>Connection profiles</b>, click <b>Assign profile</b> and pick the profile the instructor approved. Open its <b>Profile details</b> and confirm the effective Database (<code>&lt;DEV_DATABASE&gt;</code>), Schema, Warehouse (<code>&lt;LAB_WAREHOUSE&gt;</code>) and Role. A profile that is merely selectable is not necessarily the right one.</li>
+        <li>If you were authorised to create a profile, choose <b>Add new profile</b>, pick the existing lab connection, select <b>Key pair</b>, and enter the username and private key from your 1Password link directly in the form. Set the deployment Schema to a schema of your own, different from your Studio schema, for example <code>dbt_&lt;firstname&gt;_&lt;lastname&gt;_deploy</code>. Under Connection overrides set the Database, Warehouse and Role. Click <b>Test connection</b>, then <b>Create profile</b> (a passing test alone does not save it), then assign it. Never put secrets in Extended attributes, chat or Git.</li>
+        <li>Click <b>Save</b>, reopen the environment's <b>Settings</b>, and check type, v2 Stable, branch, State and profile.</li>
+      </ol>
+
+      <h4>C. Create the job</h4>
+      <ol>
+        <li>From the environment, select <b>Create job</b>, then <b>Deploy job</b>. Name it <code>build_&lt;firstname&gt;_&lt;lastname&gt;</code> and confirm the environment is yours.</li>
+        <li>Under <b>Execution settings</b>, <b>Commands</b>, replace the default with one line, and switch <b>Generate docs on run</b> on:
+<pre>dbt build</pre></li>
+        <li>Set dbt State to <b>Inherited from environment</b>, keep the dbt version inherited, set <b>Compare changes against</b> to <b>No deferral</b>, keep <b>Run source freshness</b> off, and set <b>Run timeout</b> to 600 seconds.</li>
+        <li>Under <b>Triggers</b>, turn <b>Run on schedule</b> off and leave <b>Run when another job finishes</b> off. Save, then recheck the settings.</li>
+      </ol>
+
+      <h4>D. Run it once and verify</h4>
+      <ol>
+        <li>On the saved job's page, click <b>Run now</b> once. Saving a job does not build anything. Wait for the final status.</li>
+        <li>Open the run details. Confirm the environment is yours and the run's Git commit matches <code>&lt;DEPLOY_COMMIT&gt;</code>. In the build step logs check for a 2.x runtime and <code>dbt State is enabled</code>. Investigate failed steps before continuing.</li>
+        <li>Confirm the relations were built in <code>&lt;DEV_DATABASE&gt;</code> under your deployment schema (and its <code>_STAGING</code> or equivalent suffix for staging models). Target name is a profile label, not a database selector. Record models and tests executed and reused separately; a reused test was not re-executed.</li>
+        <li>Run the second time and read State's decisions: unchanged models should be reused.</li>
+        <li>In a Snowsight worksheet, check the output, substituting your identifiers:
+<pre>select count(*) as claims,
+       count_if(is_fraud) as fraud_claims
+from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
+        Compare it with the same query against your Studio schema. They should match.</li>
+        <li>Open <b>Catalog</b> from the top navigation, click <b>Explore Lineage</b> and find <code>ins_claims</code>. In Details, <b>contracted: true</b> is the contract you enforced, published as a fact anyone can look up.</li>
+        <li>Look downstream of the marts for the <b>exposure</b>, <code>ins_fraud_command_centre</code>. It is the Streamlit app you build shortly, already in the graph.</li>
       </ol>
       <div class="callout cp"><span class="lab">Checkpoint 2: the second hard gate</span>The production job must succeed and generate docs. The next sections read what it built. Without it Catalog is empty and the Columns tab is blank.</div>
       <div class="callout fb"><span class="lab">Explore Mode reads production</span>The next step answers questions about <em>production</em> data, so the production job has to have succeeded first. It also reads through an analytics credential the instructor set up, which can only see the three marts.</div>
@@ -348,8 +467,8 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
   </div>
 
   <!-- 10 -->
-  <div class="step" data-i="9" data-start="130">
-    <div class="step-head"><div class="chk"></div><span class="clock">2:10</span><span class="step-title">Ask your data with dbt Wizard Explore Mode</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
+  <div class="step" data-i="10" data-start="142">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:22</span><span class="step-title">Ask your data with dbt Wizard Explore Mode</span><span class="min">12 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <p>You have just seen exactly what metadata exists. Now watch an agent use it, without leaving the dbt platform and without writing any SQL.</p>
       <ol>
@@ -378,8 +497,8 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
   </div>
 
   <!-- 11 -->
-  <div class="step" data-i="10" data-start="142">
-    <div class="step-head"><div class="chk"></div><span class="clock">2:22</span><span class="step-title">Build the Streamlit app in Snowflake</span><span class="min">23 min</span><span class="caret">&#9656;</span></div>
+  <div class="step" data-i="11" data-start="154">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:34</span><span class="step-title">Build the Streamlit app in Snowflake</span><span class="min">23 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <p>The last layer. The same governed marts that fed the agent now feed a small app for a human. Nothing in it recomputes a definition.</p>
       <ol>
@@ -411,8 +530,8 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
   </div>
 
   <!-- 12 -->
-  <div class="step" data-i="11" data-start="165">
-    <div class="step-head"><div class="chk"></div><span class="clock">2:45</span><span class="step-title">Wrap: pull request, and what you built</span><span class="min">10 min</span><span class="caret">&#9656;</span></div>
+  <div class="step" data-i="12" data-start="177">
+    <div class="step-head"><div class="chk"></div><span class="clock">2:57</span><span class="step-title">Wrap: pull request, and what you built</span><span class="min">10 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <p>Commit and open a pull request against your own fork. Do not merge: the point is that the change is <em>reviewable</em>, not that it ships. Read the diff as a reviewer would:</p>
       <ul>
