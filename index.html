@@ -79,6 +79,11 @@
   .step-body h4{margin:18px 0 4px; font-size:14px}
   .step-body ul,.step-body ol{margin:.4em 0; padding-left:20px}
   .step-body li{margin:.3em 0}
+  .step-body li.task{list-style:none; margin-left:-20px; padding:4px 8px 4px 0}
+  .step-body li.task .tcb{margin:0 10px 0 0; vertical-align:-2px; width:16px; height:16px; accent-color:var(--green); cursor:pointer}
+  .step-body li.tdone{color:var(--muted)}
+  .step-body li.tdone > *:not(.tcb):not(pre):not(.prompt){opacity:.75}
+  .tcount{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
   .step-body code{background:#0b0f14; padding:2px 6px; border-radius:5px; font-size:12.5px}
   pre{background:#0b0f14; border:1px solid var(--border); border-radius:10px; padding:13px 15px;
     overflow:auto; font-size:12.5px; margin:.6em 0; white-space:pre-wrap}
@@ -295,6 +300,14 @@ dbt build --select staging</pre>
   <div class="step" data-i="4" data-start="46">
     <div class="step-head"><div class="chk"></div><span class="clock">0:46</span><span class="step-title">dbt Wizard I: four things are broken, fix them</span><span class="min">32 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
+      <h4>Before you start: set up Wizard</h4>
+      <ul>
+        <li>In Studio, confirm your personal branch is selected and <b>Status</b> is <b>Parsed</b> (or Compiled). If you just changed your connection settings, open <b>More IDE options</b> at the bottom right, select <b>Restart Studio</b> and click <b>Restart</b>. Your project files are kept.</li>
+        <li>Open the <b>dbt Wizard</b> tab beside <b>Commands</b> and <b>Lineage</b>. This lab uses the browser experience, so no terminal install is needed. If the panel is missing, Wizard availability depends on your provisioned account: ask the instructor.</li>
+        <li>Keep <b>Ask for approval</b> selected, so Wizard proposes changes and you approve them before any file is written.</li>
+        <li>Open <b>Version control</b> once so you know where the diffs appear. You will review every change there.</li>
+      </ul>
+
       <p><b>The centre of the lab.</b> Run the whole project:</p>
 <pre>dbt build</pre>
       <p>It does not go green. Four things in your project are deliberately broken, in three independent branches, so one failure does not hide the rest. Some only appear after you fix another.</p>
@@ -330,6 +343,17 @@ Do NOT change the test yet. First run dbt show on the model it checks and on the
       <div class="callout fb"><span class="lab">Two of the four have a fix that turns the build green and is still wrong</span>
         Loosening a test until it passes, or labelling a value with something plausible, are both ways to get a green build and a wrong table. Before you accept any diff, ask: does this make the <em>data</em> right, or only the <em>build</em> green? If you are not sure, ask Wizard to show you the rows before and after.
       </div>
+      <h4>Your task list</h4>
+      <ul>
+        <li>Run <code>dbt build</code> and confirm it fails. Copy the first error.</li>
+        <li>Ask Wizard to diagnose the failure with the debug loop prompt, and read its explanation before it changes anything.</li>
+        <li>Review the proposed diff under <b>Version control</b>, approve it only if it makes the data right and not just the build green, and run <code>dbt build</code> again.</li>
+        <li>Fix the invalid identifier error.</li>
+        <li>Fix the failing singular test (decide first whether the model or the test is wrong).</li>
+        <li>Fix the contract mismatch.</li>
+        <li>Fix the fourth issue, which only shows up after the others. Ask Wizard to show you the rows before and after for anything that changed a number.</li>
+        <li>Run <code>dbt build</code> end to end and check that it exits green.</li>
+      </ul>
       <div class="callout cp"><span class="lab">Done when</span><code>dbt build</code> exits green for the four broken things. One test may still report a warning: that is a real data problem (a policy that starts after its own claim) and a warning is the right severity for one row in a thousand.</div>
     </div>
   </div>
@@ -362,8 +386,17 @@ Follow the conventions of the other marts: materialized as a table, every column
 
 When done, run dbt build --select ins_fraud_signals and use dbt show to list the ten rows with the highest fraud_lift. Tell me which three signals stand out and whether the rest look like noise.</pre></div>
       <ul>
+        <li>Ask Wizard to propose the files first, then approve the edits only when the proposed paths and contents match what you asked for.</li>
+        <li>Review the diffs under <b>Version control</b>. The only changes should be the new mart and its YAML entry.</li>
+        <li>Open the new model and inspect <b>Lineage</b>: trace <code>ins_claims</code> into <code>ins_fraud_signals</code>.</li>
+        <li>Verify the build target before you trust it: run
+<pre>dbt ls --select +ins_fraud_signals --resource-type model --output json --output-keys unique_id name database schema alias resource_type</pre>
+        and check that every model targets your <code>&lt;DEV_DATABASE&gt;</code>. If one points elsewhere, correct your personal credentials and restart Studio.</li>
         <li>Before you accept it, <b>read the SQL</b>. Did it stack the dimensions once, or write ten near-identical queries?</li>
         <li>Check the contract has all seven columns, and that the 20-claim floor is really in the query.</li>
+        <li>Ask Wizard for a bounded, read-only check (no writes, no commits):
+<div class="prompt"><span class="tag">dbt Wizard: read-only checks</span><button class="copy">Copy</button>
+<pre>Without changing any file or running anything that writes, use dbt show with a limit to check three things on ins_fraud_signals: that signal_key has no duplicates, that no row has claim_count below 20, and that the sum of claim_count for any single signal_dimension equals the number of rows in ins_claims. Report the results and do not fix anything.</pre></div></li>
         <li>Open the result. How many signals stand out, and how many are noise? Which of them would you hand to a fraud investigator, and which would you <em>not</em> price a policy on?</li>
       </ul>
 
@@ -377,6 +410,13 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
       <div class="prompt"><span class="tag">dbt Wizard: unit test</span><button class="copy">Copy</button>
 <pre>Write a dbt unit test for int_insurance_claim_enrichment that checks the claim_size_band thresholds at their exact boundaries: 9999.99 and 10000.00, 49999.99 and 50000.00, 79999.99 and 80000.00. Mock ref('stg_insurance_claims') with inline rows, and only assert on claim_size_band. Add a second assertion on insured_age_band at 29, 30, 59 and 60. Run it with dbt test --select test_type:unit and tell me whether the boundaries behave the way the comments in the model say they should.</pre></div>
 
+      <h4>Your task list</h4>
+      <ul>
+        <li>Exercise 1: <code>ins_fraud_signals</code> built, reviewed and checked.</li>
+        <li>Exercise 2: the intermediate YAML exists, its tests pass, and the accepted values match the CASE expressions.</li>
+        <li>Exercise 3: the unit test passes at the exact boundaries (<code>dbt test --select test_type:unit</code>).</li>
+        <li>Say the three strongest fraud signals out loud.</li>
+      </ul>
       <div class="callout cp"><span class="lab">Done when</span><code>ins_fraud_signals</code> builds, its contract is enforced, and you can name the three strongest signals out loud.</div>
     </div>
   </div>
@@ -602,9 +642,9 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
 
 <script>
 (function(){
-  var KEY = 'insurance-lab-guide-v1';
+  var KEY = 'insurance-lab-guide-v2';
   var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
-  var store = {done:{}, started:null};
+  var store = {done:{}, tasks:{}, started:null};
   try { store = Object.assign(store, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
   function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {} }
 
@@ -614,6 +654,11 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
       var i = s.dataset.i, d = !!store.done[i];
       s.classList.toggle('done', d);
       s.querySelector('.chk').textContent = d ? '✓' : '';
+      var t = s._tasks ? s._tasks.length : 0, c = 0;
+      for (var j = 0; j < t; j++) if (store.tasks[i + ':' + j]) c++;
+      var m = s.querySelector('.tcount');
+      if (!m && t) { m = document.createElement('span'); m.className = 'tcount'; s.querySelector('.min').before(m); }
+      if (m) m.textContent = c + '/' + t;
       if (d) n++;
     });
     document.getElementById('pilln').textContent = n;
@@ -622,6 +667,27 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
     document.getElementById('openhint').textContent = open + ' of ' + steps.length + ' open';
   }
 
+  // ---- checkable tasks: every list item inside a step becomes a task ----
+  if (!store.tasks) store.tasks = {};
+  steps.forEach(function(s){
+    var items = Array.prototype.slice.call(s.querySelectorAll('.step-body li')).filter(function(li){ return !li.closest('.prompt'); });
+    s._tasks = items;
+    items.forEach(function(li, k){
+      var key = s.dataset.i + ':' + k;
+      li.classList.add('task');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'tcb'; cb.checked = !!store.tasks[key];
+      li.classList.toggle('tdone', cb.checked);
+      li.insertBefore(cb, li.firstChild);
+      cb.addEventListener('change', function(){
+        if (cb.checked) store.tasks[key] = true; else delete store.tasks[key];
+        li.classList.toggle('tdone', cb.checked);
+        if (items.length) store.done[s.dataset.i] = items.every(function(_, j){ return store.tasks[s.dataset.i + ':' + j]; });
+        save(); render();
+      });
+    });
+  });
+
   steps.forEach(function(s){
     s.querySelector('.step-head').addEventListener('click', function(e){
       if (e.target.classList.contains('chk')) return;
@@ -629,7 +695,8 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
     });
     s.querySelector('.chk').addEventListener('click', function(e){
       e.stopPropagation();
-      store.done[s.dataset.i] = !store.done[s.dataset.i];
+      var nd = !store.done[s.dataset.i]; store.done[s.dataset.i] = nd;
+      s._tasks.forEach(function(li, j){ var k = s.dataset.i + ':' + j; if (nd) store.tasks[k] = true; else delete store.tasks[k]; li.classList.toggle('tdone', nd); li.querySelector('.tcb').checked = nd; });
       save(); render();
     });
   });
@@ -637,7 +704,7 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
   document.getElementById('collapse').onclick = function(){ steps.forEach(function(s){ s.classList.remove('open'); }); render(); };
   document.getElementById('reset').onclick = function(){
     if (!confirm('Clear all ticked steps and the lab clock?')) return;
-    store = {done:{}, started:null}; save(); render(); tick();
+    store = {done:{}, tasks:{}, started:null}; save(); location.reload();
   };
   document.getElementById('startclock').onclick = function(){
     store.started = Date.now(); save(); tick();
