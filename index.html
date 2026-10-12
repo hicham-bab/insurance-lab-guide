@@ -571,11 +571,27 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
     <div class="step-head"><div class="chk"></div><span class="clock">2:34</span><span class="step-title">Build the Streamlit app in Snowflake</span><span class="min">23 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <p>The last layer. The same governed marts that fed the agent now feed a small app for a human. Nothing in it recomputes a definition.</p>
+      <h4>A. Get the app code (no Git needed)</h4>
+      <p>The app is created in Snowsight by pasting one file, so nothing here needs a pull request or a merge. Copy the file from either place:</p>
       <ol>
-        <li>Snowsight, <b>Projects</b>, <b>Streamlit</b>, <b>+ Streamlit App</b>.</li>
-        <li>Title <code>claims_fraud_command_centre</code>. Choose the <b>database and schema where your production job built the marts</b>, and a warehouse.</li>
-        <li>Delete the starter code. Paste in the contents of <code>streamlit_app/streamlit_app.py</code> from the repo. Press <b>Run</b>.</li>
-        <li>If it says it cannot read <code>ins_claims</code>, fix the database and schema in the sidebar. No code change needed.</li>
+        <li>In dbt Studio, open <code>streamlit_app/streamlit_app.py</code> (it is already on your branch), select all and copy. Or, in the GitHub repo, open <code>streamlit_app/streamlit_app.py</code>, click <b>Raw</b>, select all and copy.</li>
+        <li>Note where your marts live. After the job or your Studio build they are in <code>&lt;DEV_DATABASE&gt;.&lt;DBT_SCHEMA&gt;</code> (Studio) or <code>&lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;</code> (your deploy job). Pick one and use it for the whole step.</li>
+      </ol>
+
+      <h4>B. Create the app in Snowsight</h4>
+      <ol>
+        <li>In Snowsight, go to <b>Projects</b>, <b>Streamlit</b>, then <b>+ Streamlit App</b>.</li>
+        <li>Title it <code>claims_fraud_command_centre_&lt;firstname&gt;_&lt;lastname&gt;</code>, so it does not clash with anyone else's app.</li>
+        <li>Choose the <b>database and schema that hold your marts</b> (from part A), and <code>&lt;LAB_WAREHOUSE&gt;</code>. Creating the app in the same schema as the marts is the zero-config path, because the app defaults to the database and schema it lives in.</li>
+        <li>Delete the starter code, paste the file you copied, and press <b>Run</b>.</li>
+        <li>If it says it cannot read <code>ins_claims</code>, fix the Database and Schema fields in the app sidebar. No code change needed. If Snowsight will not let you create the app at all, your role lacks <code>CREATE STREAMLIT</code> on that schema: ask the instructor rather than granting it yourself.</li>
+      </ol>
+      <div class="callout fb"><span class="lab">Where does my edit live?</span>A Streamlit in Snowflake app stores its code in Snowflake, not in Git. When you add your tile in the editor, you save it there with <b>Run</b>. It does not appear in your branch and you do not need to commit it. If you want to keep your version, copy the final code into a note.</div>
+      <h4>C. Check it, then extend it</h4>
+      <ol>
+        <li>Compare the numbers in your app with the table below, and with what Explore Mode told you.</li>
+        <li>Add one tile, chart or filter (the <code>TODO</code> at the bottom of the file), then press <b>Run</b> to save it.</li>
+        <li>Stretch: build the <code>ins_claims_weekly</code> mart with Wizard in dbt Studio, then read it in the app.</li>
       </ol>
       <div class="callout key"><span class="lab">From Explore Mode to the app</span>Take one answer you liked in the last step, open its <b>SQL</b> view and copy the query. You will paste it into the app as a new tile. Replace the table names with the helper the app already uses, <code>table('ins_claims')</code>, so it follows the sidebar's database and schema.</div>
       <p>Check the numbers against what Explore Mode told you:</p>
