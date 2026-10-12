@@ -173,15 +173,16 @@
     <div class="step-body">
       <p>Build a PostgreSQL to Snowflake connector. The point is not that configuring a connector is hard. It is that it takes a few minutes and then raw tables exist in Snowflake.</p>
       <ol>
-        <li>In Fivetran, add a destination for your Snowflake database, then a <b>PostgreSQL</b> connector. Host, user and password are on your lab credentials card.</li>
-        <li>Set the destination schema prefix to <code>&lt;firstname&gt;_&lt;lastname&gt;</code> (lowercase). Your data lands in <code>&lt;firstname&gt;_&lt;lastname&gt;_insurance</code>.</li>
-        <li>On the schema screen, select <b>only</b> the <code>insurance</code> schema and its <code>claims</code> table.</li>
+        <li><b>Destination first.</b> The connector cannot be created until it has somewhere to land. In Fivetran go to <b>Destinations</b> and add <b>Snowflake</b>. Use the <b>Key pair</b> authentication option and take the host, database (the one ending in <code>_LANDING</code>), warehouse, role, user and private key from your lab credentials card. Run <b>Save &amp; Test</b> and wait for every check to go green.</li>
+        <li><b>Then the connection.</b> Add a <b>PostgreSQL</b> connector pointing at that destination. Host, port, database, user and password are on your credentials card.</li>
+        <li>Name the connection <code>postgres</code>. Fivetran builds the Snowflake schema from the connection name plus the source schema, so your data lands in <code>POSTGRES_INSURANCE</code> in your <code>..._LANDING</code> database.</li>
+        <li>On the schema screen, select the <code>insurance</code> schema. You will see <code>claims</code> and <code>icp_records</code> land; the lab models use <code>claims</code>.</li>
         <li>Save, test, and start the initial sync. Then move on while it runs. Nobody watches a progress bar.</li>
       </ol>
       <p>When it finishes, check it in a Snowflake worksheet:</p>
-<pre>select count(*) from &lt;your_database&gt;.&lt;firstname&gt;_&lt;lastname&gt;_insurance.claims;   -- expect 1000
+<pre>select count(*) from &lt;your_database&gt;_LANDING.postgres_insurance.claims;   -- expect 1000
 
-select collision_type, count(*) from &lt;your_database&gt;.&lt;firstname&gt;_&lt;lastname&gt;_insurance.claims
+select collision_type, count(*) from &lt;your_database&gt;_LANDING.postgres_insurance.claims
 group by 1 order by 2 desc;                                                     -- look for the '?'</pre>
       <div class="callout key"><span class="lab">Notice</span><code>_fivetran_synced</code> is not in the source. Fivetran adds it, and it is how you answer "when did this row last change".</div>
     </div>
@@ -193,10 +194,14 @@ group by 1 order by 2 desc;                                                     
     <div class="step-body">
       <ol>
         <li>Create your dbt platform project, connect Snowflake, and connect the repo.</li>
+        <li><b>Set your development credentials before you open the Studio editor.</b> Go to your profile, then <b>Credentials</b>, pick this project, and enter your Snowflake username and authentication (key pair or password, as on your credentials card) and a target <b>schema</b> of your own, for example <code>dbt_&lt;firstname&gt;_&lt;lastname&gt;</code>. Without this the editor will not run anything.</li>
         <li>Create <b>two</b> environments now: a development one, and a <b>production</b> deployment one. Two minutes here saves confusion later.</li>
       </ol>
-            <p>In the Studio editor, open <code>dbt_project.yml</code> and change one line:</p>
-<pre>source_schema: '&lt;the schema ending in _INSURANCE in your ..._LANDING database&gt;'</pre>
+      <p>Before you edit anything, confirm the exact schema Fivetran created. In a Snowflake worksheet:</p>
+<pre>show schemas like '%INSURANCE' in database &lt;your_database&gt;_LANDING;</pre>
+      <p>In the Studio editor, open <code>dbt_project.yml</code> and change one line to the name that query returned (the repo used to ship <code>insurance</code>, which does not exist in your database):</p>
+<pre>source_schema: 'postgres_insurance'</pre>
+      <p>If <code>show schemas</code> returned a different name (for example because you named the connection something else), use that instead.</p>
       <p>The source database is derived for you: your DEV target database with <code>_DEV</code>/<code>_PROD</code> swapped for <code>_LANDING</code>. Set the <code>source_database</code> var only if your data lives elsewhere.</p>
       <p>Then in the command bar:</p>
 <pre>dbt deps
@@ -427,6 +432,7 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
   <h2>If you get stuck</h2>
   <table class="grid">
     <tr><th>Symptom</th><th>Most likely cause</th></tr>
+    <tr><td><code>Schema '..._LANDING.INSURANCE' does not exist or not authorized</code></td><td><code>source_schema</code> is still the default <code>insurance</code>. Set it to <code>postgres_insurance</code> (or whatever <code>show schemas</code> in step 3), and make sure the Fivetran sync finished. If the schema is listed but the error persists, your role lacks USAGE on it: ask the instructor.</td></tr>
         <tr><td><code>invalid identifier</code> on a source column</td><td>Wrong <code>source_schema</code>, or your sync has not finished.</td></tr>
     <tr><td>Staging red at Checkpoint 1</td><td>Same as above. Nothing in staging is broken on purpose.</td></tr>
     <tr><td>Catalog is empty</td><td>The production job has not run, or ran without <b>Generate docs on run</b>.</td></tr>
