@@ -199,11 +199,11 @@
         <li>In Fivetran, open the <b>Destinations</b> tab and click <b>Add destination</b>.</li>
         <li>Search for <b>Snowflake</b> and select it.</li>
         <li>Name the destination <code>&lt;firstname&gt;_&lt;lastname&gt;_snowflake</code> with your real first and last name, then click <b>Add</b>.</li>
-        <li>Enter the Snowflake credentials from your lab credentials card: host, user and role. Set <b>Database</b> to the database ending in <code>_LANDING</code>. Do not leave the default <code>fivetran</code>: your lab user has no access to it, and <b>Save &amp; Test</b> will fail with <i>Unable to access the database fivetran, or the user ... does not have the necessary permissions</i>.</li>
+        <li>Enter the Snowflake credentials from your lab credentials card: host, user and role. Set <b>Database</b> to the <b>full</b> database name from your card (it ends in <code>_LANDING</code> but starts with <code>LAB_DB_</code>; typing only <code>_LANDING</code> fails). Do not leave the default <code>fivetran</code>: your lab user has no access to it, and <b>Save &amp; Test</b> will fail with <i>Unable to access the database fivetran, or the user ... does not have the necessary permissions</i>.</li>
         <li>For the authentication method select <b>Key Pair</b> and paste in the provided private key.</li>
         <li>Under <b>Deployment model</b> select <b>SaaS</b>. For <b>Table Type</b> select <b>Snowflake Native Tables</b>.</li>
         <li>Leave <b>Connection Method</b> and <b>Storage for Unstructured Files</b> at their defaults.</li>
-        <li>Click <b>Load Virtual Warehouses</b> and select the warehouse from your credentials, which should be <code>TECH_FOUNDATIONS_HOL_WAREHOUSE</code>. Do <b>not</b> pick <code>SNOWFLAKE_LEARNING_WH</code>: it will not work for this lab.</li>
+        <li>Click <b>Load Virtual Warehouses</b> and select the warehouse from your credentials, which should be <code>TRANSFORMATIONS_HOL_WAREHOUSE</code>. Do <b>not</b> pick <code>SNOWFLAKE_LEARNING_WH</code>: it will not work for this lab.</li>
         <li>Leave every remaining field at its default, then click <b>Save &amp; Test</b>.</li>
         <li>Wait for the setup tests. When every test is marked successful, click <b>View Destination</b> (or <b>Continue</b>).</li>
       </ol>
