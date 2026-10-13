@@ -199,7 +199,7 @@
         <li>In Fivetran, open the <b>Destinations</b> tab and click <b>Add destination</b>.</li>
         <li>Search for <b>Snowflake</b> and select it.</li>
         <li>Name the destination <code>&lt;firstname&gt;_&lt;lastname&gt;_snowflake</code> with your real first and last name, then click <b>Add</b>.</li>
-        <li>Enter the Snowflake credentials from your lab credentials card: host, user and role. Set <b>Database</b> to the <b>full</b> database name from your card (it ends in <code>_LANDING</code> but starts with <code>LAB_DB_</code>; typing only <code>_LANDING</code> fails). Do not leave the default <code>fivetran</code>: your lab user has no access to it, and <b>Save &amp; Test</b> will fail with <i>Unable to access the database fivetran, or the user ... does not have the necessary permissions</i>.</li>
+        <li>Enter the Snowflake credentials from your <b>1Password</b> lab credentials link: host, user and role. For <b>Database</b>, use the <b>Snowflake landing database listed in the 1Password item</b>, copied exactly as shown (it starts with <code>LAB_DB_</code> and ends in <code>_LANDING</code>). Do not type your own, do not leave the default <code>fivetran</code>, and do not use the <code>_DEV</code> or <code>_PROD</code> database. Anything else fails <b>Save &amp; Test</b> with <i>Unable to access the database ..., or the user ... does not have the necessary permissions</i>.</li>
         <li>For the authentication method select <b>Key Pair</b> and paste in the provided private key.</li>
         <li>Under <b>Deployment model</b> select <b>SaaS</b>. For <b>Table Type</b> select <b>Snowflake Native Tables</b>.</li>
         <li>Leave <b>Connection Method</b> and <b>Storage for Unstructured Files</b> at their defaults.</li>
@@ -257,7 +257,7 @@ group by 1 order by 2 desc;                                                     
       <ol>
         <li>Click <b>Status: Disconnected</b> to open the Server status. It will tell you credentials are missing.</li>
         <li>Click <b>View Credentials</b> to open the pane for your development credentials.</li>
-        <li>In <b>Connection details</b>, set <b>Database</b> to the development database for your lab (the name ends in <code>_DEV</code>). Do not leave it blank and do not use the shared <code>LABSTUDIOS</code> database.</li>
+        <li>In <b>Connection details</b>, set <b>Database</b> to the development database listed in your 1Password item (the name ends in <code>_DEV</code>). Do not leave it blank and do not use the shared <code>LABSTUDIOS</code> database.</li>
         <li>For <b>Auth method</b>, select <b>Key pair</b>.</li>
         <li>Enter the <b>Username</b> from your 1Password link.</li>
         <li>Enter the <b>Private key</b> from your 1Password link.</li>
@@ -656,7 +656,7 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
   <h2>If you get stuck</h2>
   <table class="grid">
     <tr><th>Symptom</th><th>Most likely cause</th></tr>
-    <tr><td>Fivetran destination test: <code>Unable to access the database fivetran</code></td><td>The destination's <b>Database</b> field still has the default <code>fivetran</code>. Set it to the database ending in <code>_LANDING</code> from your credentials card, then <b>Save &amp; Test</b> again.</td></tr>
+    <tr><td>Fivetran destination test: <code>Unable to access the database fivetran</code></td><td>The destination's <b>Database</b> field is not the landing database from your 1Password item (it still has the default <code>fivetran</code>, or a typed or partial name). Copy the landing database exactly as listed in 1Password, then <b>Save &amp; Test</b> again.</td></tr>
     <tr><td><code>Schema '..._LANDING.INSURANCE' does not exist or not authorized</code></td><td><code>source_schema</code> is still the project default. Set it to <code>&lt;firstname&gt;_&lt;lastname&gt;_postgres_insurance</code>, the schema Fivetran created (check with <code>show schemas</code> in step 2)</td></tr>
         <tr><td><code>invalid identifier</code> on a source column</td><td>Wrong <code>source_schema</code>, or your sync has not finished.</td></tr>
     <tr><td>Staging red at Checkpoint 1</td><td>Same as above. Nothing in staging is broken on purpose.</td></tr>
