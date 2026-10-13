@@ -199,7 +199,7 @@
         <li>In Fivetran, open the <b>Destinations</b> tab and click <b>Add destination</b>.</li>
         <li>Search for <b>Snowflake</b> and select it.</li>
         <li>Name the destination <code>&lt;firstname&gt;_&lt;lastname&gt;_snowflake</code> with your real first and last name, then click <b>Add</b>.</li>
-        <li>Enter the Snowflake credentials from your lab credentials card.</li>
+        <li>Enter the Snowflake credentials from your lab credentials card: host, user and role. Set <b>Database</b> to the database ending in <code>_LANDING</code>. Do not leave the default <code>fivetran</code>: your lab user has no access to it, and <b>Save &amp; Test</b> will fail with <i>Unable to access the database fivetran, or the user ... does not have the necessary permissions</i>.</li>
         <li>For the authentication method select <b>Key Pair</b> and paste in the provided private key.</li>
         <li>Under <b>Deployment model</b> select <b>SaaS</b>. For <b>Table Type</b> select <b>Snowflake Native Tables</b>.</li>
         <li>Leave <b>Connection Method</b> and <b>Storage for Unstructured Files</b> at their defaults.</li>
@@ -656,6 +656,7 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
   <h2>If you get stuck</h2>
   <table class="grid">
     <tr><th>Symptom</th><th>Most likely cause</th></tr>
+    <tr><td>Fivetran destination test: <code>Unable to access the database fivetran</code></td><td>The destination's <b>Database</b> field still has the default <code>fivetran</code>. Set it to the database ending in <code>_LANDING</code> from your credentials card, then <b>Save &amp; Test</b> again.</td></tr>
     <tr><td><code>Schema '..._LANDING.INSURANCE' does not exist or not authorized</code></td><td><code>source_schema</code> is still the project default. Set it to <code>&lt;firstname&gt;_&lt;lastname&gt;_postgres_insurance</code>, the schema Fivetran created (check with <code>show schemas</code> in step 2)</td></tr>
         <tr><td><code>invalid identifier</code> on a source column</td><td>Wrong <code>source_schema</code>, or your sync has not finished.</td></tr>
     <tr><td>Staging red at Checkpoint 1</td><td>Same as above. Nothing in staging is broken on purpose.</td></tr>
