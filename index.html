@@ -385,21 +385,15 @@ Do NOT change the test yet. First run dbt show on the model it checks and on the
     <div class="step-body">
       <p>Repairing is half of what Wizard is for. Now use it to create things that do not exist yet. Three exercises, in order of value. Do the first for sure.</p>
 
-      <div class="callout key"><span class="lab">How to brief an agent</span>Name the model it should read, state the grain, name the layer, say what contract and tests you expect, and ask it to <b>verify with dbt show</b> before it tells you it is done. A prompt with those four things gets a different quality of answer from "make a fraud table".</div>
+      <div class="callout key"><span class="lab">How to brief an agent</span>Say what you want to know and why, not how to build it. Wizard reads your project, so it already knows the layers, the casting and contract conventions, the tests that fit and how to verify with <code>dbt show</code>. You will compare what it chose with what you would have specified. The less you dictate, the more you see what an agent that knows dbt does by default. Add detail only where it is a <em>business</em> decision (here: ignore tiny groups) or an interface another tool depends on (here: the app reads five columns).</div>
 
       <p><b>Exercise 1: build a mart from a business question (15 min).</b> Where does confirmed fraud concentrate?</p>
       <div class="prompt"><span class="tag">dbt Wizard: generate a model</span><button class="copy">Copy</button>
-<pre>Create a new mart model called ins_fraud_signals in models/marts, reading from ref('ins_claims').
+<pre>Where does confirmed fraud concentrate? Build me a mart called ins_fraud_signals on top of ins_claims that shows, for the main claim and policy attributes, how much more often fraud occurs for each value than overall. Ignore values with very few claims, because a lift on a tiny group means nothing.
 
-Goal: show where confirmed fraud concentrates. One row per dimension and value, across these ten dimensions of ins_claims: incident_severity, incident_type, insured_hobbies, insured_occupation, auto_make, policy_state, police_report_available, authorities_contacted, claim_size_band, incident_time_of_day.
+An app will read it, so I need these columns: signal_dimension, signal_value, claim_count, fraud_rate and fraud_lift (the value's fraud rate divided by the overall fraud rate).
 
-Columns: signal_key (dimension and value joined, the primary key), signal_dimension, signal_value, claim_count, fraud_claim_count, fraud_rate, and fraud_lift, which is the value's fraud rate divided by the overall fraud rate.
-
-Only include values with at least 20 claims, because lift on a tiny group means nothing.
-
-Follow the conventions of the other marts: materialized as a table, every column explicitly cast with cast(), no ::, an enforced contract with a data_type for every column, a unique and not_null test on signal_key, and descriptions on every column. Put the YAML in models/marts/_insurance__marts.yml.
-
-When done, run dbt build --select ins_fraud_signals and use dbt show to list the ten rows with the highest fraud_lift. Tell me which three signals stand out and whether the rest look like noise.</pre></div>
+Build it the way this project does things, check that it works, and tell me which signals stand out and which look like noise.</pre></div>
       <ul>
         <li>Ask Wizard to propose the files first, then approve the edits only when the proposed paths and contents match what you asked for.</li>
         <li>Review the diffs under <b>Version control</b>. The only changes should be the new mart and its YAML entry.</li>
@@ -408,10 +402,11 @@ When done, run dbt build --select ins_fraud_signals and use dbt show to list the
 <pre>dbt ls --select +ins_fraud_signals --resource-type model --output json --output-keys unique_id name database schema alias resource_type</pre>
         and check that every model targets your <code>&lt;DEV_DATABASE&gt;</code>. If one points elsewhere, correct your personal credentials and restart Studio.</li>
         <li>Before you accept it, <b>read the SQL</b>. Did it stack the dimensions once, or write ten near-identical queries?</li>
-        <li>Check the contract has all seven columns, and that the 20-claim floor is really in the query.</li>
+        <li>Look at what Wizard decided on its own and was never told: which dimensions it picked, how it named and keyed the rows, the materialization, the contract and its data types, the tests and the descriptions. Does it match the other marts?</li>
+        <li>Check the minimum-claims floor it chose. Is it a sensible number, and did it tell you why?</li>
         <li>Ask Wizard for a bounded, read-only check (no writes, no commits):
 <div class="prompt"><span class="tag">dbt Wizard: read-only checks</span><button class="copy">Copy</button>
-<pre>Without changing any file or running anything that writes, use dbt show with a limit to check three things on ins_fraud_signals: that signal_key has no duplicates, that no row has claim_count below 20, and that the sum of claim_count for any single signal_dimension equals the number of rows in ins_claims. Report the results and do not fix anything.</pre></div></li>
+<pre>Without changing any file or running anything that writes, use dbt show with a limit to check ins_fraud_signals: that its key has no duplicates, that no value rests on only a handful of claims, and that for any single signal_dimension the claim counts add up to the number of rows in ins_claims. Report the results and do not fix anything.</pre></div></li>
         <li>Open the result. How many signals stand out, and how many are noise? Which of them would you hand to a fraud investigator, and which would you <em>not</em> price a policy on?</li>
       </ul>
 
