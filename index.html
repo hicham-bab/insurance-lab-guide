@@ -164,6 +164,20 @@
   <div class="step" data-i="0" data-start="0">
     <div class="step-head"><div class="chk"></div><span class="clock">0:00</span><span class="step-title">Welcome, meet the project, meet the data</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
+      
+      <h4>Register and collect your access</h4>
+      <ol>
+        <li>Register for the lab here: <a href="https://labstudios-staging.fivetran-internal-sales.com/register/cpcKXzYVf1oInxTNcGxpsOP1H-z_jYVqGMnodlRr_lI" target="_blank" rel="noopener">https://labstudios-staging.fivetran-internal-sales.com/register/...</a></li>
+        <li>You will receive a welcome email ("Thank you for signing up for the Transformations Training"). It holds your <b>Lab credentials</b> link (it expires <b>Oct 27, 2026</b>), the <b>dbt Platform project</b> link, and a link to this <b>Interactive Guide</b>. You can start straight from the guide and the credentials.</li>
+        <li>Two invitations arrive by email, and you need both:
+          <ul>
+            <li><b>Fivetran:</b> an invite from <code>notifications@fivetran.com</code> to the <code>TRANSFORMATIONS_STAGING_HOL</code> account. Accept it and either sign in with your existing Fivetran email and password (you can reset it if you forgot it) or create a new password for your email.</li>
+            <li><b>dbt platform:</b> an invite from <code>support@getdbt.com</code> to the account <b>Partner Hands-on Labs Staging</b>. It expires after 7 days. dbt may warn that it comes from an admin with a different email domain: that is expected, accept it.</li>
+          </ul>
+        </li>
+        <li>Open your lab credentials link and keep it open in a tab. Every key, username and warehouse name you need later is on it.</li>
+      </ol>
+      <h4>Meet the project</h4>
       <ol>
         <li>Everything is already set up for you in the background: the dbt project, its Git repository and the connection to it. You never open the repository itself. You work in <b>dbt Studio</b>, on your own branch, which you create in the dbt platform step before you edit anything.</li>
         <li>The dbt project is the root of that repository, so in Studio you edit <code>dbt_project.yml</code> and the models directly.</li>
@@ -181,6 +195,7 @@
 
       <h4>A. Create your destination</h4>
       <ol>
+        <li>Accept the Fivetran invite from <code>notifications@fivetran.com</code> and sign in to the <code>TRANSFORMATIONS_STAGING_HOL</code> account (see the welcome step). Everything below happens in that account.</li>
         <li>In Fivetran, open the <b>Destinations</b> tab and click <b>Add destination</b>.</li>
         <li>Search for <b>Snowflake</b> and select it.</li>
         <li>Name the destination <code>&lt;firstname&gt;_&lt;lastname&gt;_snowflake</code> with your real first and last name, then click <b>Add</b>.</li>
@@ -230,7 +245,7 @@ group by 1 order by 2 desc;                                                     
     <div class="step-body">
       <h4>A. Accept the invite and log in</h4>
       <ol>
-        <li>Open the email titled <b>A colleague invites you to collaborate with them in dbt Cloud</b> (from <code>support@getdbt.com</code>) and click <b>Join Partner Hands-on Labs</b>.</li>
+        <li>Open the dbt invitation email (from <code>support@getdbt.com</code>, "A colleague invites you to work with them in the dbt account Partner Hands-on Labs Staging") and click <b>Join Partner Hands-on Labs Staging</b>. If dbt flags the different email domain, that is expected. If the link has expired (7 days), ask the instructor for a new one.</li>
         <li>Fill in the form: first name, last name, a password and the confirmation. Tick <b>I agree to dbt's Terms of Service</b> and click <b>Get started</b>.</li>
         <li>Record these credentials. You may need them to log back in during the lab.</li>
         <li>Once logged in, click <b>Project</b> in the left navigation bar and select the project. Only one project starting with <code>LAB_DBT</code> should be visible.</li>
