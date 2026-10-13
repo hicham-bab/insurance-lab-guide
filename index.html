@@ -412,13 +412,11 @@ Build it the way this project does things, check that it works, and tell me whic
 
       <p><b>Exercise 2: document and test a model that has nothing (5 min).</b> The intermediate models ship with no YAML at all.</p>
       <div class="prompt"><span class="tag">dbt Wizard: docs and tests</span><button class="copy">Copy</button>
-<pre>int_insurance_claim_enrichment has no YAML. Create models/intermediate/_insurance__intermediate.yml for it. Read the model SQL first, then write a description for the model and for every derived column (age band, policy tenure, claim size band, claim to premium multiple, time of day, vehicle age, confirmed fraud amount), using the thresholds actually in the SQL.
-
-Add tests where they are meaningful: unique and not_null on claim_id, accepted_values on every banded column with exactly the values the CASE expression can produce, and a non-negative check on confirmed_fraud_amount. Use the arguments: form for test arguments. Then run dbt build --select int_insurance_claim_enrichment and tell me if any test fails.</pre></div>
+<pre>int_insurance_claim_enrichment has no documentation or tests. Add them, the way this project does it, and tell me if anything fails.</pre></div>
 
       <p><b>Exercise 3: unit test business logic (5 min).</b> A unit test checks the logic with hand-written rows, no warehouse data.</p>
       <div class="prompt"><span class="tag">dbt Wizard: unit test</span><button class="copy">Copy</button>
-<pre>Write a dbt unit test for int_insurance_claim_enrichment that checks the claim_size_band thresholds at their exact boundaries: 9999.99 and 10000.00, 49999.99 and 50000.00, 79999.99 and 80000.00. Mock ref('stg_insurance_claims') with inline rows, and only assert on claim_size_band. Add a second assertion on insured_age_band at 29, 30, 59 and 60. Run it with dbt test --select test_type:unit and tell me whether the boundaries behave the way the comments in the model say they should.</pre></div>
+<pre>The claim size bands and age bands in int_insurance_claim_enrichment are business rules. Write a unit test that proves they behave as the model's comments say, especially right at the thresholds, and tell me whether they do.</pre></div>
 
       <h4>Your task list</h4>
       <ul>
@@ -621,7 +619,7 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
 
       <p><b>Stretch: close the loop from model to consumer.</b> The app has a panel that appears the moment <code>ins_fraud_signals</code> exists. If you built it in Studio, or your deploy job built it, in the same database and schema the app reads (see the sidebar), check the Where fraud concentrates tab. If it is not there, <code>ins_fraud_signals</code> was built somewhere else, or your grants are stale.</p>
       <div class="prompt"><span class="tag">dbt Wizard: a new mart for the app</span><button class="copy">Copy</button>
-<pre>Create a mart ins_claims_weekly from ref('ins_claims'): one row per week of incident_date (date_trunc('week')), with claim_count, total_claimed, fraud_claim_count and fraud_rate. Primary key is the week start date. Enforce a contract, add unique and not_null on the key, cast every column explicitly, and verify with dbt show. Then tell me what a week-by-week chart of a two month window can and cannot tell us.</pre></div>
+<pre>Add a weekly mart on top of ins_claims, ins_claims_weekly, that I can chart in the app: claims, amounts and fraud rate by week of incident date. Build it the way this project does it, then tell me what a week-by-week chart over a two month window can and cannot tell us.</pre></div>
     </div>
   </div>
 
