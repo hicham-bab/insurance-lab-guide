@@ -162,11 +162,11 @@
 
   <!-- 1 -->
   <div class="step" data-i="0" data-start="0">
-    <div class="step-head"><div class="chk"></div><span class="clock">0:00</span><span class="step-title">Welcome, meet the repo, meet the data</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
+    <div class="step-head"><div class="chk"></div><span class="clock">0:00</span><span class="step-title">Welcome, meet the project, meet the data</span><span class="min">8 min</span><span class="caret">&#9656;</span></div>
     <div class="step-body">
       <ol>
-        <li>Use the repo your instructor gave you (<code>dbt-insurance-lab-hol</code> in the dbt-Hands-on-Labs org, or a copy of it). You create your own branch in the dbt platform step, before you edit anything.</li>
-        <li>The dbt project sits at the repo root, so you will edit <code>dbt_project.yml</code> and the models directly.</li>
+        <li>Everything is already set up for you in the background: the dbt project, its Git repository and the connection to it. You never open the repository itself. You work in <b>dbt Studio</b>, on your own branch, which you create in the dbt platform step before you edit anything.</li>
+        <li>The dbt project is the root of that repository, so in Studio you edit <code>dbt_project.yml</code> and the models directly.</li>
         <li>The data: one table, <code>claims</code>, 1,000 rows. One row per auto insurance claim, with the policy, the insured, the incident, the amounts, the vehicle, and whether the claim was confirmed as fraud.</li>
       </ol>
       <div class="callout key"><span class="lab">Look at this before you model it</span>Three columns use the text <code>?</code> to mean "no value". You will meet it again, and what you decide it means matters.</div>
@@ -257,7 +257,7 @@ group by 1 order by 2 desc;                                                     
         <li>In the left navigation bar click <b>Create branch</b>.</li>
         <li>Name it <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code> and click <b>Create branch</b>.</li>
       </ol>
-      <div class="callout cp"><span class="lab">Checkpoint: dbt platform setup</span>Your development environment is connected to Snowflake with your own credentials, and you have an isolated branch in the connected GitHub repository to work in.</div>
+      <div class="callout cp"><span class="lab">Checkpoint: dbt platform setup</span>Your development environment is connected to Snowflake with your own credentials, and you have an isolated branch of the project to work in.</div>
 
       <h4>D. Point the project at your data and run the first build</h4>
       <p>Record these five names from your own lab now. You will reuse them in later steps.</p>
@@ -271,7 +271,7 @@ group by 1 order by 2 desc;                                                     
       </table>
       <p>You wrote down your landing schema in the Fivetran step. If you did not, look it up in a Snowflake worksheet:</p>
 <pre>show schemas like '%POSTGRES_INSURANCE' in database &lt;your_database&gt;_LANDING;</pre>
-      <p>In the Studio editor, open <code>dbt_project.yml</code> and change one line to your own schema. The repo ships with <code>postgres_insurance</code>, which does not exist for you, because your connection is named <code>&lt;firstname&gt;_&lt;lastname&gt;_postgres</code>:</p>
+      <p>In the Studio editor, open <code>dbt_project.yml</code> and change one line to your own schema. The project ships with <code>postgres_insurance</code>, which does not exist for you, because your connection is named <code>&lt;firstname&gt;_&lt;lastname&gt;_postgres</code>:</p>
 <pre>source_schema: '&lt;firstname&gt;_&lt;lastname&gt;_postgres_insurance'</pre>
       <p>The source database is derived for you: your <code>_DEV</code> database with <code>_DEV</code>/<code>_PROD</code> swapped for <code>_LANDING</code>. Set the <code>source_database</code> var only if your data lives elsewhere.</p>
       <p>Then in the command bar:</p>
@@ -489,8 +489,8 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
       <ol>
         <li>Complete the State step first: the original <code>10000</code> threshold must be restored. Confirm you are on your <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code>.</li>
         <li>Under <b>Version control</b>, read the list of changed files before you commit. Commit and sync can include everything, so if there are unrelated edits, ask dbt Wizard to commit only the files you meant to change and review the proposed list before approving.</li>
-        <li>Use <b>Go to repository</b>, sign in to GitHub if needed, and verify your remote branch holds your changes and no temporary threshold. Record the exact branch name and the commit SHA as <code>&lt;DEPLOY_BRANCH&gt;</code> and <code>&lt;DEPLOY_COMMIT&gt;</code>.</li>
-        <li>Pull requests are disabled in this lab: push to your own branch only. Do not merge into, or push directly to, a protected or shared default branch. If repository policy blocks your branch, ask the instructor rather than changing branch protections.</li>
+        <li>You do not need to open GitHub. In Studio, check that <b>Version control</b> shows nothing left uncommitted or unsynced, and note your exact branch name as <code>&lt;DEPLOY_BRANCH&gt;</code>. Also check that no temporary threshold remains in the files you committed. A deploy job checks out the remote branch, so it can only see what you have committed and synced.</li>
+        <li>Pull requests are disabled in this lab: sync your own branch only. Never merge into, or push directly to, the project's main branch. If syncing is blocked, ask the instructor.</li>
       </ol>
 
       <h4>B. Confirm your deployment environment</h4>
@@ -499,7 +499,7 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
         <li>Go to <b>Orchestration</b>, then <b>Environments</b>. Open your environment, or <b>Create environment</b> and name it <code>deploy_&lt;firstname&gt;_&lt;lastname&gt;</code>.</li>
         <li>Choose <b>Deployment</b> as the type and check the deployment type before saving. The creation form can default to Production.</li>
         <li>Confirm <b>dbt version</b> is <b>v2 Stable</b>. This is separate from your personal Studio override and does not carry over.</li>
-        <li>Select <b>Only run on a custom branch</b> and enter the exact <code>&lt;DEPLOY_BRANCH&gt;</code>. Otherwise jobs check out the repository default branch, which does not have your work.</li>
+        <li>Select <b>Only run on a custom branch</b> and enter the exact <code>&lt;DEPLOY_BRANCH&gt;</code>. Otherwise jobs check out the project's main branch, which does not have your work.</li>
         <li>Under dbt State, select <b>Enable dbt State</b>. Your personal State setting does not configure the environment.</li>
         <li>Under <b>Connection profiles</b>, click <b>Assign profile</b> and pick the profile the instructor approved. Open its <b>Profile details</b> and confirm the effective Database (<code>&lt;DEV_DATABASE&gt;</code>), Schema, Warehouse (<code>&lt;LAB_WAREHOUSE&gt;</code>) and Role. A profile that is merely selectable is not necessarily the right one.</li>
         <li>If you were authorised to create a profile, choose <b>Add new profile</b>, pick the existing lab connection, select <b>Key pair</b>, and enter the username and private key from your 1Password link directly in the form. Set the deployment Schema to a schema of your own, different from your Studio schema, for example <code>dbt_&lt;firstname&gt;_&lt;lastname&gt;_deploy</code>. Under Connection overrides set the Database, Warehouse and Role. Click <b>Test connection</b>, then <b>Create profile</b> (a passing test alone does not save it), then assign it. Never put secrets in Extended attributes, chat or Git.</li>
@@ -518,7 +518,7 @@ Add tests where they are meaningful: unique and not_null on claim_id, accepted_v
       <h4>D. Run it once and verify</h4>
       <ol>
         <li>On the saved job's page, click <b>Run now</b> once. Saving a job does not build anything. Wait for the final status.</li>
-        <li>Open the run details. Confirm the environment is yours and the run's Git commit matches <code>&lt;DEPLOY_COMMIT&gt;</code>. In the build step logs check for a 2.x runtime and <code>dbt State is enabled</code>. Investigate failed steps before continuing.</li>
+        <li>Open the run details. Confirm the environment is yours and the run's Git commit is the latest commit you synced from Studio. In the build step logs check for a 2.x runtime and <code>dbt State is enabled</code>. Investigate failed steps before continuing.</li>
         <li>Confirm the relations were built in <code>&lt;DEV_DATABASE&gt;</code> under your deployment schema (and its <code>_STAGING</code> or equivalent suffix for staging models). Target name is a profile label, not a database selector. Record models and tests executed and reused separately; a reused test was not re-executed.</li>
         <li>Run the second time and read State's decisions: unchanged models should be reused.</li>
         <li>In a Snowsight worksheet, check the output, substituting your identifiers:
@@ -572,9 +572,9 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
     <div class="step-body">
       <p>The last layer. The same governed marts that fed the agent now feed a small app for a human. Nothing in it recomputes a definition.</p>
       <h4>A. Get the app code (no Git needed)</h4>
-      <p>The app is created in Snowsight by pasting one file, so nothing here needs a pull request or a merge. Copy the file from either place:</p>
+      <p>The app is created in Snowsight by pasting one file, so nothing here needs a pull request, a merge or the repository. Copy the file from Studio:</p>
       <ol>
-        <li>In dbt Studio, open <code>streamlit_app/streamlit_app.py</code> (it is already on your branch), select all and copy. Or, in the GitHub repo, open <code>streamlit_app/streamlit_app.py</code>, click <b>Raw</b>, select all and copy.</li>
+        <li>In dbt Studio, open <code>streamlit_app/streamlit_app.py</code> in the file tree (it is already on your branch), select all and copy. If you cannot find it, ask the instructor for the file.</li>
         <li>Note where your marts live. After the job or your Studio build they are in <code>&lt;DEV_DATABASE&gt;.&lt;DBT_SCHEMA&gt;</code> (Studio) or <code>&lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;</code> (your deploy job). Pick one and use it for the whole step.</li>
       </ol>
 
@@ -621,8 +621,8 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
     <div class="step-body">
       <p>You cannot open pull requests in this lab, and you do not need to. Your work lives on your own <code>&lt;firstname&gt;_&lt;lastname&gt;_branch</code>. The point is that the change is <em>reviewable</em>, not that it ships, so nothing gets merged.</p>
       <ul>
-        <li>Make sure everything you want to keep is committed and pushed to your branch (see the commit step under Ship to production). Do not open a pull request and do not merge.</li>
-        <li>Open <b>Version control</b> and the branch on GitHub, and read the diff as a reviewer would:</li>
+        <li>Make sure everything you want to keep is committed and synced to your branch from Studio (see the commit step under Ship to production). Do not open a pull request and do not merge.</li>
+        <li>Open <b>Version control</b> in Studio and read your diff as a reviewer would:</li>
       </ul>
       <ul>
         <li>Four small fixes, each one a line or two, each one explainable in a sentence.</li>
@@ -641,7 +641,7 @@ from &lt;DEV_DATABASE&gt;.&lt;DEPLOY_SCHEMA&gt;.INS_CLAIMS;</pre>
   <h2>If you get stuck</h2>
   <table class="grid">
     <tr><th>Symptom</th><th>Most likely cause</th></tr>
-    <tr><td><code>Schema '..._LANDING.INSURANCE' does not exist or not authorized</code></td><td><code>source_schema</code> is still the repo default. Set it to <code>&lt;firstname&gt;_&lt;lastname&gt;_postgres_insurance</code>, the schema Fivetran created (check with <code>show schemas</code> in step 2)</td></tr>
+    <tr><td><code>Schema '..._LANDING.INSURANCE' does not exist or not authorized</code></td><td><code>source_schema</code> is still the project default. Set it to <code>&lt;firstname&gt;_&lt;lastname&gt;_postgres_insurance</code>, the schema Fivetran created (check with <code>show schemas</code> in step 2)</td></tr>
         <tr><td><code>invalid identifier</code> on a source column</td><td>Wrong <code>source_schema</code>, or your sync has not finished.</td></tr>
     <tr><td>Staging red at Checkpoint 1</td><td>Same as above. Nothing in staging is broken on purpose.</td></tr>
     <tr><td>Catalog is empty</td><td>The production job has not run, or ran without <b>Generate docs on run</b>.</td></tr>
